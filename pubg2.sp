@@ -30,19 +30,19 @@
 
 #define T           2   /**< Terrorists. */
 #define CT          3   /**< Counter-Terrorists. */
+#define LoopAllTerrorist(%1) for (int %1 = 1; %1 <= MaxClients; %1++) if (IsClientInGame(%1) && GetClientTeam(%1) == T)
 
 char dosyayolu[PLATFORM_MAX_PATH];
-
-bool g_bAktif = false;
+char silahlar[11][32] = { "weapon_ak47", "weapon_m4a1_silencer", "weapon_m4a1", "weapon_famas", "weapon_mag7", "weapon_mp7", "weapon_ump45", "weapon_bizon", "weapon_mp5sd", "weapon_mac10", "weapon_mp9" };
 
 int g_iBeamSprite = -1, g_iHaloSprite = -1;
 int g_kacinci, g_iTeammates[MAXPLAYERS + 1] =  { 0 };
 
-#define LoopAllTerrorist(%1) for (int %1 = 1; %1 <= MaxClients; %1++) if (IsClientInGame(%1) && GetClientTeam(%1) == T)
+bool g_bAktif = false;
 
 public Plugin myinfo = 
 {
-	name = "", 
+	name = "pabici", 
 	author = "phiso", 
 	description = "", 
 	version = "1.0", 
@@ -61,6 +61,9 @@ public void OnMapStart()
 	AddFileToDownloadsTable("materials/models/Plugincim_com/PUBG/silah.vmt");
 	AddFileToDownloadsTable("materials/models/Plugincim_com/PUBG/silah.vtf");
 	PrecacheModel("models/Plugincim_com/PUBG/silah.mdl");
+	
+	AddFileToDownloadsTable("sound/sourcepawn_com/silah.mp3");
+	PrecacheSound("sourcepawn_com/silah.mp3");
 }
 
 public void OnPluginStart()
@@ -72,47 +75,6 @@ public void OnPluginStart()
 	BuildPath(Path_SM, dosyayolu, sizeof(dosyayolu), "configs/pubgalan");
 	if (!DirExists(dosyayolu))
 		CreateDirectory(dosyayolu, 0o777);
-}
-
-public Action PubgBaslat(int client, int args)
-{
-	if (g_bAktif == false)
-	{
-		if (IsValidClient(client))
-			CreateTimer(40.0, PubgSureBitti, client, TIMER_FLAG_NO_MAPCHANGE);
-	}
-	else
-	{
-		PrintToChat(client, "[SM] \x01Zaten aktif bir oyun var");
-	}
-	return Plugin_Continue;
-}
-
-public Action PubgSureBitti(Handle timer, any client)
-{
-	KeyValues kv = CreateKeyValues("pubgsilah");
-	char map[64];
-	float origin[3] = 0.0;
-	GetCurrentMap(map, sizeof(map));
-	StringToLowerCase(map);
-	BuildPath(Path_SM, dosyayolu, sizeof(dosyayolu), "configs/pubgalan/%s_silah.txt", map);
-	FileToKeyValues(kv, dosyayolu);
-	if (!kv.GotoFirstSubKey())
-	{
-		PrintToChat(client, "Sunucunda oluşturulmuş herhangi bir alan bulunmamaktadır.");
-		delete kv;
-		return Plugin_Handled;
-	}
-	do
-	{
-		kv.GetVector("Koordinat", origin); //modelspawn yapılacak
-		SilahOlustur(origin, "models/Plugincim_com/PUBG/silah.mdl");
-	}
-	while (kv.GotoNextKey());
-	delete kv;
-	
-	g_bAktif = true;
-	return Plugin_Continue;
 }
 
 public Action CMD_PubgTakim(int client, int args)
@@ -146,19 +108,6 @@ public Action CMD_PubgTakim(int client, int args)
 	}
 }
 
-public void OnayMenu(int client, int gonderen)
-{
-	Menu onaym = new Menu(OnayMenuCallBack);
-	onaym.SetTitle("%N Takım Daveti Yolladı", gonderen);
-	onaym.AddItem("kabul", "Kabul Et!");
-	onaym.AddItem("red", "Reddet!");
-	
-	g_iTeammates[client] = gonderen;
-	g_iTeammates[gonderen] = client;
-	
-	onaym.ExitButton = false;
-	onaym.Display(client, 10);
-}
 
 public int TakimMenuCallBack(Menu menu, MenuAction action, int client, int position)
 {
@@ -174,6 +123,20 @@ public int TakimMenuCallBack(Menu menu, MenuAction action, int client, int posit
 	{
 		delete menu;
 	}
+}
+
+public void OnayMenu(int client, int gonderen)
+{
+	Menu onaym = new Menu(OnayMenuCallBack);
+	onaym.SetTitle("%N Takım Daveti Yolladı", gonderen);
+	onaym.AddItem("kabul", "Kabul Et!");
+	onaym.AddItem("red", "Reddet!");
+	
+	g_iTeammates[client] = gonderen;
+	g_iTeammates[gonderen] = client;
+	
+	onaym.ExitButton = false;
+	onaym.Display(client, 10);
 }
 
 public int OnayMenuCallBack(Menu menu, MenuAction action, int client, int itemNum)
@@ -205,15 +168,72 @@ public int OnayMenuCallBack(Menu menu, MenuAction action, int client, int itemNu
 	}
 }
 
+public Action OnTakeDamage(int victim, int &attacker, int &inflictor, float &damage, int &damagetype, int &weapon, float damageForce[3], float damagePosition[3])
+{
+	if (g_bAktif == true)
+	{
+		if (g_iTeammates[attacker] == victim)
+		{
+			damage = 0.0;
+			return Plugin_Changed;
+		}
+	}
+	return Plugin_Continue;
+}
+
+public Action PubgBaslat(int client, int args)
+{
+	if (IsValidClient(client))
+	{
+		KeyValues kv = CreateKeyValues("pubgsilah");
+		char map[64];
+		float origin[3] = 0.0;
+		GetCurrentMap(map, sizeof(map));
+		StringToLowerCase(map);
+		BuildPath(Path_SM, dosyayolu, sizeof(dosyayolu), "configs/pubgalan/%s_silah.txt", map);
+		FileToKeyValues(kv, dosyayolu);
+		if (!kv.GotoFirstSubKey())
+		{
+			PrintToChat(client, "Sunucunda oluşturulmuş herhangi bir alan bulunmamaktadır.");
+			delete kv;
+			return Plugin_Handled;
+		}
+		do
+		{
+			kv.GetVector("Koordinat", origin); //modelspawn yapılacak
+			SilahOlustur(origin, "models/Plugincim_com/PUBG/silah.mdl");
+		}
+		while (kv.GotoNextKey());
+		delete kv;
+		return Plugin_Handled;
+	}
+	return Plugin_Continue;
+}
+
 public Action OnStartTouch(int entity, int client)
 {
 	//if (OyunOynaniyor)
 	{
 		if (IsValidClient(client) && IsPlayerAlive(client))
 		{
+			GivePlayerItem(client, silahlar[GetRandomInt(0, 11)]);
+			Give_Effect(client, { 255, 0, 0, 130 } );
+			int m_iRotator = GetEntPropEnt(entity, Prop_Send, "m_hEffectEntity");
+			if (m_iRotator && IsValidEdict(m_iRotator))
+				AcceptEntityInput(m_iRotator, "Kill");
+			CreateTimer(0.0, Remove_Entity, entity);
+			SDKUnhook(entity, SDKHook_StartTouch, OnStartTouch);
 			
+			EmitSoundToClient(client, "sourcepawn_com/silah.mp3");
 		}
 	}
+}
+
+public Action Remove_Entity(Handle timer, int entity)
+{
+	if (IsValidEntity(entity))
+		RemoveEntity(entity);
+	return Plugin_Stop;
 }
 
 public Action PubgAyar(int client, int args)
@@ -331,6 +351,7 @@ public int AyarMenu(Menu menu, MenuAction action, int client, int item)
 
 
 /*
+
 	Stocks
 	
 */
@@ -394,7 +415,7 @@ stock int GetRandomPlayer(int team = -1, bool OnlyAlive = false)
 
 stock void SilahOlustur(float position[3], const char[] model)
 {
-
+	
 	int tas = CreateEntityByName("prop_physics_override");
 	DispatchKeyValueVector(tas, "origin", position);
 	DispatchKeyValue(tas, "model", model);
@@ -429,19 +450,6 @@ stock void SilahOlustur(float position[3], const char[] model)
 	SetEntPropEnt(tas, Prop_Send, "m_hEffectEntity", m_iRotator);
 	
 	SDKHook(tas, SDKHook_StartTouch, OnStartTouch);
-}
-
-public Action OnTakeDamage(int victim, int &attacker, int &inflictor, float &damage, int &damagetype, int &weapon, float damageForce[3], float damagePosition[3])
-{
-	if (g_bAktif == true)
-	{
-		if (g_iTeammates[attacker] == victim)
-		{
-			damage = 0.0;
-			return Plugin_Changed;
-		}
-	}
-	return Plugin_Continue;
 }
 
 stock void Give_Effect(int client, int Color[4])
