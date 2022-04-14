@@ -23,6 +23,7 @@
 
 #include <sourcemod>
 #include <sdktools>
+#include <sdkhooks>
 
 #pragma semicolon 1
 #pragma newdecls required
@@ -48,12 +49,20 @@ public void OnMapStart()
 {
 	g_iBeamSprite = PrecacheModel("materials/sprites/laserbeam.vmt");
 	g_iHaloSprite = PrecacheModel("materials/sprites/glow06.vmt");
+	
+	AddFileToDownloadsTable("models/Plugincim_com/PUBG/silah.dx90.vtx");
+	AddFileToDownloadsTable("models/Plugincim_com/PUBG/silah.mdl");
+	AddFileToDownloadsTable("models/Plugincim_com/PUBG/silah.phy");
+	AddFileToDownloadsTable("models/Plugincim_com/PUBG/silah.vvd");
+	AddFileToDownloadsTable("materials/models/Plugincim_com/PUBG/silah.vmt");
+	AddFileToDownloadsTable("materials/models/Plugincim_com/PUBG/silah.vtf");
+	PrecacheModel("models/Plugincim_com/PUBG/silah.mdl");
 }
 
 public void OnPluginStart()
 {
 	RegConsoleCmd("sm_pubgayarla", PubgAyar);
-	RegConsoleCmd("sm_pubg", PubgBaslat);
+	RegConsoleCmd("sm_pubgphiso", PubgBaslat);
 	
 	BuildPath(Path_SM, dosyayolu, sizeof(dosyayolu), "configs/pubgalan");
 	if (!DirExists(dosyayolu))
@@ -79,14 +88,25 @@ public Action PubgBaslat(int client, int args)
 		}
 		do
 		{
-			kv.GetVector("Koordinat2", origin);//modelspawn yapılacak
-			TeleportEntity(kisi, origin, NULL_VECTOR, NULL_VECTOR);
+			kv.GetVector("Koordinat", origin); //modelspawn yapılacak
+			SilahOlustur(origin, "models/Plugincim_com/PUBG/silah.mdl");
 		}
 		while (kv.GotoNextKey());
 		delete kv;
 		return Plugin_Handled;
 	}
 	return Plugin_Continue;
+}
+
+public Action OnStartTouch(int entity, int client)
+{
+	//if (OyunOynaniyor)
+	{
+		if (IsValidClient(client) && IsPlayerAlive(client))
+		{
+
+		}
+	}
 }
 
 public Action PubgAyar(int client, int args)
@@ -147,7 +167,6 @@ public int AyarMenu(Menu menu, MenuAction action, int client, int item)
 		else if (item == 2)
 		{
 			char map[64];
-			char format[512];
 			GetCurrentMap(map, sizeof(map));
 			StringToLowerCase(map);
 			BuildPath(Path_SM, dosyayolu, sizeof(dosyayolu), "configs/pubgalan/%s_oyuncu.txt", map);
@@ -205,65 +224,9 @@ public int AyarMenu(Menu menu, MenuAction action, int client, int item)
 
 
 /*
-	Stock
-*/
 
-/*public Action test(int client, int args)
-{
-	Menu menu = new Menu(Alan_Handler);
-	menu.SetTitle("✦ Alanlar ✦\n ");
-	char map[64];
-	GetCurrentMap(map, sizeof(map));
-	StringToLowerCase(map);
-	BuildPath(Path_SM, dosyayolu, sizeof(dosyayolu), "configs/pubgalan/%s_silah.txt", map);
-	KeyValues kv = CreateKeyValues("pubgsilah");
-	FileToKeyValues(kv, dosyayolu);
-	if (!kv.GotoFirstSubKey())
-	{
-		PrintToChat(client, "[SM] \x02Sunucunda oluşturulmuş herhangi bir alan bulunmamaktadır.");
-		delete kv;
-		return Plugin_Handled;
-	}
-	char pinid[32];
-	do
-	{
-		kv.GetSectionName(pinid, sizeof(pinid));
-		menu.AddItem(pinid, pinid);
-	}
-	while (kv.GotoNextKey());
-	delete kv;
-	menu.Display(client, 20);
-	return Plugin_Handled;
-}
-
-public int Alan_Handler(Menu menu, MenuAction action, int client, int param2)
-{
-	switch (action)
-	{
-		case MenuAction_Select:
-		{
-			char item[32];
-			menu.GetItem(param2, item, sizeof(item));
-			char map[64];
-			GetCurrentMap(map, sizeof(map));
-			StringToLowerCase(map);
-			BuildPath(Path_SM, dosyayolu, sizeof(dosyayolu), "configs/pubgalan/%s_silah.txt", map);
-			float vector[3] = 0.0;
-			KeyValues kv = CreateKeyValues("pubgsilah");
-			FileToKeyValues(kv, dosyayolu);
-			if (kv.JumpToKey(item, false))
-			{
-				kv.GetVector("Koordinat", vector);
-				delete kv;
-			}
-			TeleportEntity(client, vector, NULL_VECTOR, NULL_VECTOR); //sectigi yere isinla
-		}
-		case MenuAction_End:
-		{
-			delete menu;
-		}
-	}
-}
+	Stocks
+	
 */
 
 stock bool IsValidClient(int client)
@@ -273,19 +236,6 @@ stock bool IsValidClient(int client)
 		return false;
 	}
 	return true;
-}
-
-public void GetAimCoords(int client, float vector[3])
-{
-	float vAngles[3];
-	float vOrigin[3];
-	GetClientEyePosition(client, vOrigin);
-	GetClientEyeAngles(client, vAngles);
-	
-	Handle trace = TR_TraceRayFilterEx(vOrigin, vAngles, MASK_SHOT, RayType_Infinite, TraceEntityFilterPlayer);
-	if (TR_DidHit(trace))
-		TR_GetEndPosition(vector, trace);
-	trace.Close();
 }
 
 stock void StringToLowerCase(char[] szInput)
@@ -334,4 +284,56 @@ stock int GetRandomPlayer(int team = -1, bool OnlyAlive = false)
 		}
 	}
 	return (clientCount == 0) ? -1 : clients[GetRandomInt(0, clientCount - 1)];
+}
+
+stock void SilahOlustur(float position[3], const char[] model)
+{
+	
+	int tas = CreateEntityByName("prop_physics_override");
+	DispatchKeyValueVector(tas, "origin", position);
+	DispatchKeyValue(tas, "model", model);
+	DispatchKeyValue(tas, "physicsmode", "2");
+	DispatchKeyValue(tas, "massScale", "1.0");
+	DispatchSpawn(tas);
+	
+	char targetname[100];
+	Format(targetname, sizeof(targetname), "tas_%i", tas);
+	
+	SetEntProp(tas, Prop_Send, "m_usSolidFlags", 8);
+	SetEntProp(tas, Prop_Send, "m_CollisionGroup", 1);
+	SetEntPropFloat(tas, Prop_Send, "m_flModelScale", 0.65);
+	
+	position[2] += 40.0;
+	TeleportEntity(tas, position, NULL_VECTOR, NULL_VECTOR);
+	
+	int m_iRotator = CreateEntityByName("func_rotating");
+	DispatchKeyValueVector(m_iRotator, "origin", position);
+	DispatchKeyValue(m_iRotator, "targetname", targetname);
+	DispatchKeyValue(m_iRotator, "maxspeed", "200");
+	DispatchKeyValue(m_iRotator, "friction", "0");
+	DispatchKeyValue(m_iRotator, "dmg", "0");
+	DispatchKeyValue(m_iRotator, "solid", "0");
+	DispatchKeyValue(m_iRotator, "spawnflags", "64");
+	DispatchSpawn(m_iRotator);
+	
+	SetVariantString("!activator");
+	AcceptEntityInput(tas, "SetParent", m_iRotator, m_iRotator);
+	AcceptEntityInput(m_iRotator, "Start");
+	
+	SetEntPropEnt(tas, Prop_Send, "m_hEffectEntity", m_iRotator);
+	
+	SDKHook(tas, SDKHook_StartTouch, OnStartTouch);
 } 
+
+stock void Give_Effect(int client, int Color[4])
+{
+	int clients[1];
+	clients[0] = client;
+	Handle message = StartMessageEx(GetUserMessageId("Fade"), clients, 1, 0);
+	Protobuf pb = UserMessageToProtobuf(message);
+	pb.SetInt("duration", 200);
+	pb.SetInt("hold_time", 40);
+	pb.SetInt("flags", 17);
+	pb.SetColor("clr", Color);
+	EndMessage();
+} // efekt verilecek
