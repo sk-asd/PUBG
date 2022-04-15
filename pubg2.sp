@@ -14,10 +14,12 @@
 char dosyayolu[PLATFORM_MAX_PATH];
 
 char g_szWeapons[][] = {
-	"weapon_ak47", "weapon_m4a1_silencer", "weapon_m4a1", "weapon_famas", "weapon_mag7", "weapon_mp7", "weapon_ump45", "weapon_bizon", "weapon_mp5sd", "weapon_mac10", "weapon_mp9",
-	"weapon_deagle", "weapon_fiveseven", "weapon_tec9", "weapon_revolver", "weapon_cz75",
-	"weapon_bumpmine", "weapon_hegrenade", "weapon_molotov", "weapon_taser",
+	"weapon_ak47", "weapon_m4a1_silencer", "weapon_m4a1", "weapon_famas", "weapon_mag7", "weapon_mp7", "weapon_ump45", "weapon_bizon", "weapon_mp5sd", "weapon_mac10", "weapon_mp9", 
+	"weapon_deagle", "weapon_fiveseven", "weapon_tec9", "weapon_revolver", "weapon_cz75", 
+	"weapon_bumpmine", "weapon_hegrenade", "weapon_molotov", "weapon_taser", 
 };
+
+//char g_szSpawnPoint[][128];
 
 int g_iBeamSprite = -1, g_iHaloSprite = -1;
 int g_kacinci, g_iTeammates[MAXPLAYERS + 1] = { 0 };
@@ -57,7 +59,7 @@ public void OnPluginStart()
 	RegConsoleCmd("sm_pubgphiso", PubgBaslat);
 	RegConsoleCmd("sm_pubgphiso0", Pubg0);
 	RegConsoleCmd("sm_pubgtakimol", CMD_PubgTakim);
-
+	
 	HookEvent("player_death", Event_PlayerDeath);
 	
 	BuildPath(Path_SM, dosyayolu, sizeof(dosyayolu), "configs/pubgalan");
@@ -74,19 +76,15 @@ public Action Pubg0(int client, int args)
 		SetCvar("mp_teammates_are_enemies", 0);
 		SetCvar("mp_friendlyfire", 0);
 		SilahTemizle();
+		YeriTemizle();
 		foreachPlayer(player)
 		{
-			if (IsValidClient(player))
-			{
-				SDKUnhook(player, SDKHook_OnTakeDamage, OnTakeDamage);
-				g_iTeammates[player] = 0;
-				PrintToChat(player, "[SM] \x02%N \x04isimli yetkili pubg oyununu durdurdu!");
-				ClearWeaponEx(player);
-				GivePlayerItem(player, "weapon_knife");
-			}
+			SDKUnhook(player, SDKHook_OnTakeDamage, OnTakeDamage);
+			g_iTeammates[player] = 0;
+			PrintToChat(player, "[SM] \x02%N \x04isimli yetkili pubg oyununu durdurdu!");
 			SetListenOverride(player, player, Listen_Yes);
-			bool muteliymis[MAXPLAYERS+1] = {false, ...};
-			if(BaseComm_IsClientMuted(player))
+			bool muteliymis[MAXPLAYERS + 1] = { false, ... };
+			if (BaseComm_IsClientMuted(player))
 				muteliymis[player] = true;
 			SetListenOverride(player, muteliymis[player], Listen_No);
 		}
@@ -186,7 +184,7 @@ public Action CMD_PubgTakim(int client, int args)
 		{
 			Menu takimm = new Menu(TakimMenuCallBack);
 			takimm.SetTitle("[PUBG] Takım Menüsü");
-			if(g_iTeammates[client] != 0)
+			if (g_iTeammates[client] != 0)
 				takimm.AddItem("ayrıl", "Takımdan Ayrıl");
 			else
 			{
@@ -223,7 +221,7 @@ public int TakimMenuCallBack(Menu menu, MenuAction action, int client, int posit
 			PrintToChat(g_iTeammates[client], "[SM] \x10%N \x01Takımdan ayrıldı!", client);
 			g_iTeammates[client] = 0;
 			g_iTeammates[g_iTeammates[client]] = 0;
-
+			
 			LoopAllTerrorist(i)
 			{
 				SetListenOverride(i, client, Listen_Yes);
@@ -233,7 +231,7 @@ public int TakimMenuCallBack(Menu menu, MenuAction action, int client, int posit
 		else
 		{
 			int target = GetClientOfUserId(StringToInt(item));
-			if(g_iTeammates[client] == 0 && g_iTeammates[target] == 0)
+			if (g_iTeammates[client] == 0 && g_iTeammates[target] == 0)
 			{
 				PrintToChat(target, "[SM] \x10%N \x01Takım daveti gönderdi.", client);
 				OnayMenu(target, client);
@@ -282,18 +280,18 @@ public int OnayMenuCallBack(Menu menu, MenuAction action, int client, int itemNu
 				SetListenOverride(i, client, Listen_No);
 				SetListenOverride(i, g_iTeammates[client], Listen_No);
 			}
-
+			
 			SetListenOverride(g_iTeammates[client], client, Listen_Yes);
 			SetListenOverride(client, g_iTeammates[client], Listen_Yes);
-
+			
 			SDKHook(client, SDKHook_OnTakeDamage, OnTakeDamage);
 			SDKHook(g_iTeammates[client], SDKHook_OnTakeDamage, OnTakeDamage);
 		}
 		else if (strcmp(info, "red") == 0)
 		{
 			PrintToChat(g_iTeammates[client], "[SM] \x10%N \x01adlı oyuncu Takım isteğini \x02reddetti!", client);
-			g_iTeammates[client] = -1;
-			g_iTeammates[g_iTeammates[client]] = -1;
+			g_iTeammates[client] = 0;
+			g_iTeammates[g_iTeammates[client]] = 0;
 		}
 	}
 	else if (action == MenuAction_End)
@@ -449,34 +447,57 @@ public int AyarMenu(Menu menu, MenuAction action, int client, int item)
 
 public Action Event_PlayerDeath(Handle event, const char[] name, bool dontBroadcast)
 {
-	if(g_bAktif == true)
+	if (g_bAktif == true)
 	{
 		int client = GetClientOfUserId(GetEventInt(event, "userid"));
 		int attacker = GetClientOfUserId(GetEventInt(event, "attacker"));
 		int takimarkadasi = g_iTeammates[attacker];
-
-		if(IsValidClient(client))
+		
+		if (IsValidClient(client))
 			g_iTeammates[client] = 0;
-
+		
 		int yasayant = 0;
 		LoopAllTerrorist(i)
 		{
-			if(IsPlayerAlive(i))
+			if (IsPlayerAlive(i))
 				yasayant++;
 		}
-		if(yasayant == 1)
+		if (yasayant == 1)
 		{
 			PrintToChatAll("[SM] \x01PUBG Oyunu bitti! \x10%N \x01oyunu kazandı!", attacker);
 			ServerCommand("sm_pubgphiso0");
-		}
-		else if(yasayant == 2)
-		{
-			if(IsValidClient(takimarkadasi))
+			LoopAllTerrorist(i)
 			{
-				if(g_iTeammates[attacker] == takimarkadasi)
+				ClearWeapon(i);
+				int knife = CreateEntityByName("weapon_knife");
+				if (knife != -1)
 				{
-					PrintToChatAll("[SM] \x01PUBG Oyunu bitti! \x10%N \x01ile \x10%N \x01oyunu kazandı!", attacker, takimarkadasi);
-					ServerCommand("sm_pubgphiso0");
+					DispatchSpawn(knife);
+					EquipPlayerWeapon(i, knife);
+				}
+			}
+		}
+		else if (yasayant == 2)
+		{
+			if (IsValidClient(takimarkadasi))
+			{
+				if (IsPlayerAlive(takimarkadasi))
+				{
+					if (g_iTeammates[attacker] == takimarkadasi)
+					{
+						PrintToChatAll("[SM] \x01PUBG Oyunu bitti! \x10%N \x01ile \x10%N \x01oyunu kazandı!", attacker, takimarkadasi);
+						ServerCommand("sm_pubgphiso0");
+						LoopAllTerrorist(i)
+						{
+							ClearWeapon(i);
+							int knife = CreateEntityByName("weapon_knife");
+							if (knife != -1)
+							{
+								DispatchSpawn(knife);
+								EquipPlayerWeapon(i, knife);
+							}
+						}
+					}
 				}
 			}
 		}
@@ -656,7 +677,7 @@ stock void SilahTemizle()
 			}
 		}
 	}
-} 
+}
 
 stock void ClearWeaponEx(int client)
 {
@@ -671,10 +692,24 @@ stock void ClearWeaponEx(int client)
 	}
 }
 
+stock void ClearWeapon(int client)
+{
+	for (int j = 0; j < 12; j++)
+	{
+		int weapon = GetPlayerWeaponSlot(client, j);
+		if (weapon != -1)
+		{
+			RemovePlayerItem(client, weapon);
+			RemoveEntity(weapon);
+		}
+	}
+	GivePlayerItem(client, "weapon_knife");
+}
+
 stock void YeriTemizle()
 {
-    int iEnt = MaxClients + 1; 
-
-    while ((iEnt = FindEntityByClassname(iEnt, "weapon_*")) != -1) 
-        AcceptEntityInput(iEnt, "Kill"); 
+	int iEnt = MaxClients + 1;
+	
+	while ((iEnt = FindEntityByClassname(iEnt, "weapon_*")) != -1)
+		AcceptEntityInput(iEnt, "Kill");
 }
