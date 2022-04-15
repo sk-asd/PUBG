@@ -15,7 +15,7 @@ char dosyayolu[PLATFORM_MAX_PATH];
 
 char g_szWeapons[][] = {
 	"weapon_ak47", "weapon_m4a1_silencer", "weapon_m4a1", "weapon_famas", "weapon_mag7", "weapon_mp7", "weapon_ump45", "weapon_bizon", "weapon_mp5sd", "weapon_mac10", "weapon_mp9", 
-	"weapon_deagle", "weapon_fiveseven", "weapon_tec9", "weapon_revolver", "weapon_cz75", 
+	"weapon_deagle", "weapon_fiveseven", "weapon_tec9", "weapon_revolver", "weapon_smokegrenade", 
 	"weapon_bumpmine", "weapon_hegrenade", "weapon_molotov", "weapon_taser", 
 };
 
@@ -101,12 +101,25 @@ public Action PubgBaslat(int client, int args)
 	{
 		hazirlanma = 40;
 		g_bAktif = true;
+		KeyValues kv = CreateKeyValues("pubgoyuncu");
+		char map[64];
+		float baslayis[3] = 0.0;
+		GetCurrentMap(map, sizeof(map));
+		StringToLowerCase(map);
+		BuildPath(Path_SM, dosyayolu, sizeof(dosyayolu), "configs/pubgalan/%s_oyuncu.txt", map);
+		FileToKeyValues(kv, dosyayolu);
+		if (kv.JumpToKey("Oyuncu Spawn Noktasi", false))
+		{
+			kv.GetVector("Koordinat2", baslayis);
+		}
 		CreateTimer(1.0, countdown, _, TIMER_FLAG_NO_MAPCHANGE | TIMER_REPEAT);
 		PrintToChatAll("[SM] \x02%N \x04Pubg oyununu başlattı!", client);
 		YeriTemizle();
 		LoopAllTerrorist(i)
 		{
 			ClearWeaponEx(i);
+			TeleportEntity(i, baslayis, NULL_VECTOR, NULL_VECTOR);
+			SetEntityMoveType(i, MOVETYPE_NONE);
 		}
 	}
 	else
@@ -152,6 +165,7 @@ public Action countdown(Handle timer)
 		LoopAllTerrorist(i)
 		{
 			ClearWeaponEx(i);
+			SetEntityMoveType(i, MOVETYPE_WALK);
 			int taser = CreateEntityByName("weapon_fists");
 			if (taser != -1)
 			{
@@ -409,7 +423,6 @@ public int AyarMenu(Menu menu, MenuAction action, int client, int item)
 			kv.ExportToFile(dosyayolu);
 			delete kv;
 			PrintCenterText(client, "Pubg oyuncu spawn noktası ayarı başarı ile yapıldı.");
-			PubgAyar(client, 0);
 		}
 		else if (item == 4)
 		{
