@@ -81,6 +81,7 @@ public Action Pubg0(int client, int args)
 		{
 			SDKUnhook(player, SDKHook_OnTakeDamage, OnTakeDamage);
 			g_iTeammates[player] = 0;
+			CreateTimer(0.1, BicakVer, player, TIMER_FLAG_NO_MAPCHANGE);
 			PrintToChat(player, "[SM] \x02%N \x04isimli yetkili pubg oyununu durdurdu!");
 			SetListenOverride(player, player, Listen_Yes);
 			bool muteliymis[MAXPLAYERS + 1] = { false, ... };
@@ -93,6 +94,11 @@ public Action Pubg0(int client, int args)
 	{
 		PrintToChat(client, "[SM] \x04Şu anda zaten bir \x02pubg \x04oyunu oynanmıyor!");
 	}
+}
+
+public Action BicakVer(Handle timer, any client)
+{
+	GivePlayerItem(client, "weapon_knife");
 }
 
 public Action PubgBaslat(int client, int args)
