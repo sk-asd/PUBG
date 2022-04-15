@@ -10,6 +10,11 @@
 #define CT          3   /**< Counter-Terrorists. */
 #define LoopAllTerrorist(%1) for (int %1 = 1; %1 <= MaxClients; %1++) if (IsClientInGame(%1) && GetClientTeam(%1) == T)
 #define foreachPlayer(%1) for (int %1 = 1; %1 <= MaxClients; %1++) if (IsClientInGame(%1) && !IsFakeClient(%1))
+#define POSITION_X                "POSITION_X"
+#define POSITION_Y                "POSITION_Y"
+#define POSITION_Z                "POSITION_Z"
+#define PLUGIN_TAG                "[Sourcepawn.com]"
+#define CUSTOM_SPAWN_ENABLED    "CUSTOM_SPAWN_ENABLED"
 
 char dosyayolu[PLATFORM_MAX_PATH];
 
@@ -19,11 +24,12 @@ char g_szWeapons[][] = {
 	"weapon_bumpmine", "weapon_hegrenade", "weapon_molotov", "weapon_taser", 
 };
 
-//char g_szSpawnPoint[][128];
+Handle ARRAY_Spawns;
 
 int g_iBeamSprite = -1, g_iHaloSprite = -1;
 int g_kacinci, g_iTeammates[MAXPLAYERS + 1] = { 0 };
 int hazirlanma = 40;
+int g_okacinci;
 
 bool g_bAktif = false;
 
@@ -51,6 +57,15 @@ public void OnMapStart()
 	
 	AddFileToDownloadsTable("sound/sourcepawn_com/silah.mp3");
 	PrecacheSound("sourcepawn_com/silah.mp3");
+	
+	char mapName[45];
+	GetCurrentMap(mapName, sizeof(mapName));
+	LoadConfiguration(mapName);
+}
+
+public void OnMapEnd()
+{
+	SaveConfiguration();
 }
 
 public void OnPluginStart()
@@ -65,6 +80,8 @@ public void OnPluginStart()
 	BuildPath(Path_SM, dosyayolu, sizeof(dosyayolu), "configs/pubgalan");
 	if (!DirExists(dosyayolu))
 		CreateDirectory(dosyayolu, 0o777);
+	
+	ARRAY_Spawns = CreateArray();
 }
 
 public Action Pubg0(int client, int args)
@@ -87,6 +104,7 @@ public Action Pubg0(int client, int args)
 			if (BaseComm_IsClientMuted(player))
 				muteliymis[player] = true;
 			SetListenOverride(player, muteliymis[player], Listen_No);
+			SetEntityMoveType(player, MOVETYPE_WALK);
 		}
 	}
 	else
@@ -101,31 +119,33 @@ public Action PubgBaslat(int client, int args)
 	{
 		hazirlanma = 40;
 		g_bAktif = true;
-		KeyValues kv = CreateKeyValues("pubgoyuncu");
-		char map[64];
-		float baslayis[3] = 0.0;
-		GetCurrentMap(map, sizeof(map));
-		StringToLowerCase(map);
-		BuildPath(Path_SM, dosyayolu, sizeof(dosyayolu), "configs/pubgalan/%s_oyuncu.txt", map);
-		FileToKeyValues(kv, dosyayolu);
-		if (kv.JumpToKey("Oyuncu Spawn Noktasi", false))
-		{
-			kv.GetVector("Koordinat2", baslayis);
-		}
 		CreateTimer(1.0, countdown, _, TIMER_FLAG_NO_MAPCHANGE | TIMER_REPEAT);
 		PrintToChatAll("[SM] \x02%N \x04Pubg oyununu başlattı!", client);
 		YeriTemizle();
 		LoopAllTerrorist(i)
 		{
 			ClearWeaponEx(i);
-			TeleportEntity(i, baslayis, NULL_VECTOR, NULL_VECTOR);
 			SetEntityMoveType(i, MOVETYPE_NONE);
+			RastgeleIsinla(i);
 		}
 	}
 	else
 	{
 		PrintToChat(client, "[SM] \x04Şu an bir \x02pubg \x04oyunu oynanıyor!");
 	}
+}
+
+stock void RastgeleIsinla(int oyuncu)
+{
+	int spawnID = GetRandomInt(0, g_okacinci - 1);
+	Handle positions = GetArrayCell(ARRAY_Spawns, spawnID);
+	
+	float newSpawn[3];
+	GetTrieValue(positions, POSITION_X, newSpawn[0]);
+	GetTrieValue(positions, POSITION_Y, newSpawn[1]);
+	GetTrieValue(positions, POSITION_Z, newSpawn[2]);
+
+	TeleportEntity(oyuncu, newSpawn, NULL_VECTOR, NULL_VECTOR);
 }
 
 public Action countdown(Handle timer)
@@ -403,26 +423,22 @@ public int AyarMenu(Menu menu, MenuAction action, int client, int item)
 		}
 		else if (item == 2)
 		{
-			char map[64];
-			GetCurrentMap(map, sizeof(map));
-			StringToLowerCase(map);
-			BuildPath(Path_SM, dosyayolu, sizeof(dosyayolu), "configs/pubgalan/%s_oyuncu.txt", map);
-			if (!FileExists(dosyayolu))
-			{
-				Handle file = OpenFile(dosyayolu, "w+");
-				CloseHandle(file);
-			}
+			float newSpawn[3];
+			GetEntPropVector(client, Prop_Send, "m_vecOrigin", newSpawn);
 			
-			KeyValues kv = new KeyValues("pubgoyuncu");
-			kv.ImportFromFile(dosyayolu);
-			kv.JumpToKey("Oyuncu Spawn Noktasi", true);
-			float origin[3] = 0.0;
-			GetClientAimText(client, origin);
-			kv.SetVector("Koordinat2", origin);
-			kv.Rewind();
-			kv.ExportToFile(dosyayolu);
-			delete kv;
+			Handle trie = CreateTrie();
+			SetTrieValue(trie, POSITION_X, newSpawn[0]);
+			SetTrieValue(trie, POSITION_Y, newSpawn[1]);
+			SetTrieValue(trie, POSITION_Z, newSpawn[2]);
+			PushArrayCell(ARRAY_Spawns, trie);
+			
+			g_okacinci++;
+			
 			PrintCenterText(client, "Pubg oyuncu spawn noktası ayarı başarı ile yapıldı.");
+			
+			SaveConfiguration();
+
+			PubgAyar(client, 0);
 		}
 		else if (item == 4)
 		{
@@ -450,6 +466,7 @@ public int AyarMenu(Menu menu, MenuAction action, int client, int item)
 				PrintCenterText(client, "Pubg oyuncu spawn noktaları sıfırlandı.");
 			}
 			PubgAyar(client, 0);
+			g_okacinci = 0;
 		}
 	}
 	else if (action == MenuAction_End)
@@ -705,4 +722,78 @@ stock void YeriTemizle()
 	
 	while ((iEnt = FindEntityByClassname(iEnt, "weapon_*")) != -1)
 		AcceptEntityInput(iEnt, "Kill");
+}
+
+
+stock void SaveConfiguration()
+{
+	char path[75], mapName[45];
+	GetCurrentMap(mapName, sizeof(mapName));
+	
+	BuildPath(Path_SM, path, sizeof(path), "configs/pubgalan/%s_oyuncu.cfg", mapName);
+	Handle Dosya = OpenFile(path, "ab", false, "GAME");
+	for (int i = 0; i < GetArraySize(ARRAY_Spawns); i++)
+	{
+		Handle trie = GetArrayCell(ARRAY_Spawns, i);
+		float Px = 0.0;
+		float Py = 0.0;
+		float Pz = 0.0;
+		GetTrieValue(trie, POSITION_X, Px);
+		GetTrieValue(trie, POSITION_Y, Py);
+		GetTrieValue(trie, POSITION_Z, Pz);
+		WriteFileLine(Dosya, "%f;%f;%f", Px, Py, Pz);
+	}
+}
+
+stock bool LoadConfiguration(const char[] mapName)
+{
+	char path[75];
+	BuildPath(Path_SM, path, sizeof(path), "configs/pubgalan/%s_oyuncu.cfg", mapName);
+	
+	if (!DirExists("addons/sourcemod/configs/pubgalan"))
+		CreateDirectory("/addons/sourcemod/configs/pubgalan", 777);
+	
+	Handle file = INVALID_HANDLE;
+	if (!FileExists(path))
+		file = OpenFile(path, "w");
+	else
+		file = OpenFile(path, "r");
+	
+	char line[200];
+	bool firstLine = true;
+	ClearArray(ARRAY_Spawns);
+	
+	while (!IsEndOfFile(file) && ReadFileLine(file, line, sizeof(line)))
+	{
+		if (firstLine)
+		{
+			firstLine = false;
+		}
+		else
+		{
+			char positions[3][15];
+			ExplodeString(line, ";", positions, sizeof positions, sizeof positions[]);
+			
+			Handle trie = CreateTrie();
+			SetTrieValue(trie, POSITION_X, StringToFloat(positions[0]));
+			SetTrieValue(trie, POSITION_Y, StringToFloat(positions[1]));
+			SetTrieValue(trie, POSITION_Z, StringToFloat(positions[2]));
+			
+			PushArrayCell(ARRAY_Spawns, trie);
+		}
+	}
+	CloseHandle(file);
+	
+	if (firstLine)
+	{
+		PrintToServer("%s Ayar Yapılmamış!", PLUGIN_TAG);
+		return false;
+	}
+	
+	g_okacinci = GetArraySize(ARRAY_Spawns);
+	
+	if (g_okacinci < 1)
+		PrintToServer("%s Hiçbir spawn noktası bulunamadı!", PLUGIN_TAG);
+	
+	return true;
 }
