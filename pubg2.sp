@@ -81,7 +81,6 @@ public Action Pubg0(int client, int args)
 		{
 			SDKUnhook(player, SDKHook_OnTakeDamage, OnTakeDamage);
 			g_iTeammates[player] = 0;
-			CreateTimer(0.1, BicakVer, player, TIMER_FLAG_NO_MAPCHANGE);
 			PrintToChat(player, "[SM] \x02%N \x04isimli yetkili pubg oyununu durdurdu!");
 			SetListenOverride(player, player, Listen_Yes);
 			bool muteliymis[MAXPLAYERS + 1] = { false, ... };
@@ -94,11 +93,6 @@ public Action Pubg0(int client, int args)
 	{
 		PrintToChat(client, "[SM] \x04Şu anda zaten bir \x02pubg \x04oyunu oynanmıyor!");
 	}
-}
-
-public Action BicakVer(Handle timer, any client)
-{
-	GivePlayerItem(client, "weapon_knife");
 }
 
 public Action PubgBaslat(int client, int args)
@@ -485,16 +479,6 @@ public Action Event_PlayerDeath(Handle event, const char[] name, bool dontBroadc
 		{
 			PrintToChatAll("[SM] \x01PUBG Oyunu bitti! \x10%N \x01oyunu kazandı!", attacker);
 			ServerCommand("sm_pubgphiso0");
-			LoopAllTerrorist(i)
-			{
-				ClearWeapon(i);
-				int knife = CreateEntityByName("weapon_knife");
-				if (knife != -1)
-				{
-					DispatchSpawn(knife);
-					EquipPlayerWeapon(i, knife);
-				}
-			}
 		}
 		else if (yasayant == 2)
 		{
@@ -506,16 +490,6 @@ public Action Event_PlayerDeath(Handle event, const char[] name, bool dontBroadc
 					{
 						PrintToChatAll("[SM] \x01PUBG Oyunu bitti! \x10%N \x01ile \x10%N \x01oyunu kazandı!", attacker, takimarkadasi);
 						ServerCommand("sm_pubgphiso0");
-						LoopAllTerrorist(i)
-						{
-							ClearWeapon(i);
-							int knife = CreateEntityByName("weapon_knife");
-							if (knife != -1)
-							{
-								DispatchSpawn(knife);
-								EquipPlayerWeapon(i, knife);
-							}
-						}
 					}
 				}
 			}
