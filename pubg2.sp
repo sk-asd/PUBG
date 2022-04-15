@@ -28,10 +28,12 @@ Handle ARRAY_Spawns;
 
 int g_iBeamSprite = -1, g_iHaloSprite = -1;
 int g_iTeammates[MAXPLAYERS + 1] = { 0 };
-int hazirlanma = 40;
+int hazirlanma;
 int g_okacinci;
 
 bool g_bAktif = false;
+
+ConVar g_hazirlanma = null;
 
 public Plugin myinfo = 
 {
@@ -57,6 +59,7 @@ public void OnMapStart()
 	
 	AddFileToDownloadsTable("sound/sourcepawn_com/silah.mp3");
 	PrecacheSound("sourcepawn_com/silah.mp3");
+	PrecacheSound("buttons/button14.wav");
 	
 	char mapName[45];
 	GetCurrentMap(mapName, sizeof(mapName));
@@ -82,7 +85,14 @@ public void OnPluginStart()
 		CreateDirectory(dosyayolu, 0o777);
 	
 	ARRAY_Spawns = CreateArray();
+	
+	g_hazirlanma = CreateConVar("sm_pubgg_hazirlanma", "20", "Pubgye hazırlanmaları için kaç saniyeleri olsun?");
+	HookConVarChange(g_hazirlanma, hazirdegisti);
+	
+	AutoExecConfig(true, "PUBG", "Sourcepawn.Com");
 }
+
+public void hazirdegisti(ConVar convar, const char[] oldValue, const char[] newValue){hazirlanma = StringToInt(newValue);}
 
 public Action Pubg0(int client, int args)
 {
@@ -93,11 +103,12 @@ public Action Pubg0(int client, int args)
 		SetCvar("mp_teammates_are_enemies", 0);
 		SetCvar("mp_friendlyfire", 0);
 		SilahTemizle();
+		YeriTemizle();
 		LoopAllTerrorist(i)
 		{
 			SetEntityMoveType(i, MOVETYPE_WALK);
 			ClearWeaponEx(i);
-			GivePlayerItem(i,"weapon_knife");
+			GivePlayerItem(i, "weapon_knife");
 		}
 		foreachPlayer(player)
 		{
@@ -121,7 +132,21 @@ public Action PubgBaslat(int client, int args)
 {
 	if (g_bAktif == false)
 	{
-		hazirlanma = 40;
+		Panel wpanel = new Panel();
+		char Mesaj[256];
+		char sure[32];
+		g_hazirlanma.GetString(sure, sizeof(sure));
+		int suremenu = StringToInt(sure);
+		Format(Mesaj, sizeof(Mesaj), "!- PUBG Oyunu Başlatıldı -!\n%d saniye sonra başlatılacak\n ", suremenu);
+		wpanel.SetTitle(Mesaj, false);
+		wpanel.DrawText("▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬");
+		wpanel.DrawText("!pubgtakimol yazarak bir takım oluşturun.");
+		wpanel.DrawText("Takım olanlar kendi aralarında sesli olarak konuşabilir.");
+		wpanel.DrawText("Seslerini sadece takım arkadaşları duyar.");
+		wpanel.DrawText("Oyun başladığında loot'lanarak düşmanları öldürün.\n ");
+		wpanel.CurrentKey = 4;
+		wpanel.DrawItem("Kapat.");
+		hazirlanma = suremenu;
 		g_bAktif = true;
 		CreateTimer(1.0, countdown, _, TIMER_FLAG_NO_MAPCHANGE | TIMER_REPEAT);
 		PrintToChatAll("[SM] \x02%N \x04Pubg oyununu başlattı!", client);
@@ -131,13 +156,17 @@ public Action PubgBaslat(int client, int args)
 			ClearWeaponEx(i);
 			SetEntityMoveType(i, MOVETYPE_NONE);
 			RastgeleIsinla(i);
+			wpanel.Send(i, callback, suremenu);
 		}
+		delete wpanel;
 	}
 	else
 	{
 		PrintToChat(client, "[SM] \x04Şu an bir \x02pubg \x04oyunu oynanıyor!");
 	}
 }
+
+public int callback(Menu menu, MenuAction action, int client, int item) { if (action == MenuAction_Select) {  } else if (action == MenuAction_End) {  } }
 
 stock void RastgeleIsinla(int oyuncu)
 {
@@ -205,9 +234,9 @@ public Action countdown(Handle timer)
 		{
 			hazirlanma--;
 			char sBuffer[512];
-			Format(sBuffer, sizeof(sBuffer), "<font color='#00FF00'>%d</font> <font color='#FF0000'>saniye sonra oyun başlayacak!</font>", hazirlanma);
+			Format(sBuffer, sizeof(sBuffer), "<font color='#00FF00'>%d</font> <font color='#FF0000'>saniye sonra oyun başlayacak!</font> <font color='#F0E68C'>!pubgtakimol</font>", hazirlanma);
 			ShowStatusMessage(-1, sBuffer, 2);
-			PrintHintTextToAll("<font size='20' color='#00FF00'>%d</font> <font size='20' color='#FF0000'>saniye sonra oyun başlayacak</font>", hazirlanma);
+			PrintHintTextToAll("<font size='20' color='#00FF00'>%d</font> <font size='20' color='#FF0000'>saniye sonra oyun başlayacak</font> <font size='20' color='#F0E68C'>!pubgtakimol</font>", hazirlanma);
 			return Plugin_Continue;
 		}
 	}
@@ -390,8 +419,9 @@ public Action PubgAyar(int client, int args)
 		menu.CurrentKey = 6;
 		menu.DrawItem("✦ Konumları Kaydet");
 		menu.DrawText("▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬");
+		menu.DrawText("➔ Oyuncu konumu oluşturduktan sonra kaydetip çıkın!");
 		menu.CurrentKey = 9;
-		menu.DrawItem("➔ Kapat");
+		menu.DrawItem("Çık.");
 		menu.Send(client, AyarMenu, MENU_TIME_FOREVER);
 		delete menu;
 	}
@@ -401,6 +431,7 @@ public int AyarMenu(Menu menu, MenuAction action, int client, int item)
 {
 	if (action == MenuAction_Select)
 	{
+		EmitSoundToClient(client, "buttons/button14.wav");
 		if (item == 1)
 		{
 			char map[64];
