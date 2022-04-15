@@ -49,13 +49,13 @@ public void OnMapStart()
 	g_iBeamSprite = PrecacheModel("materials/sprites/laserbeam.vmt");
 	g_iHaloSprite = PrecacheModel("materials/sprites/glow06.vmt");
 	
-	AddFileToDownloadsTable("models/Plugincim_com/PUBG/silah.dx90.vtx");
-	AddFileToDownloadsTable("models/Plugincim_com/PUBG/silah.mdl");
-	AddFileToDownloadsTable("models/Plugincim_com/PUBG/silah.phy");
-	AddFileToDownloadsTable("models/Plugincim_com/PUBG/silah.vvd");
-	AddFileToDownloadsTable("materials/models/Plugincim_com/PUBG/silah.vmt");
-	AddFileToDownloadsTable("materials/models/Plugincim_com/PUBG/silah.vtf");
-	PrecacheModel("models/Plugincim_com/PUBG/silah.mdl");
+	AddFileToDownloadsTable("models/sourcepawn_com/silah.dx90.vtx");
+	AddFileToDownloadsTable("models/sourcepawn_com/silah.mdl");
+	AddFileToDownloadsTable("models/sourcepawn_com/silah.phy");
+	AddFileToDownloadsTable("models/sourcepawn_com/silah.vvd");
+	AddFileToDownloadsTable("materials/models/sourcepawn_com/pubg_silah.vmt");
+	AddFileToDownloadsTable("materials/models/sourcepawn_com/pubg_silah.vtf");
+	PrecacheModel("models/sourcepawn_com/PUBG/silah.mdl");
 	
 	AddFileToDownloadsTable("sound/sourcepawn_com/silah.mp3");
 	PrecacheSound("sourcepawn_com/silah.mp3");
@@ -209,7 +209,7 @@ public Action countdown(Handle timer)
 		do
 		{
 			kv.GetVector("Koordinat", origin); //modelspawn yapılacak
-			SilahOlustur(origin, "models/Plugincim_com/PUBG/silah.mdl");
+			SilahOlustur(origin, "models/sourcepawn_com/silah.mdl");
 		}
 		while (kv.GotoNextKey());
 		delete kv;
@@ -729,7 +729,7 @@ stock void SilahTemizle()
 		if (IsValidEdict(i) && IsValidEntity(i))
 		{
 			GetEntPropString(i, Prop_Data, "m_ModelName", ModelPath, sizeof(ModelPath));
-			if (StrContains(ModelPath, "Plugincim_com/PUBG/silah") != -1)
+			if (StrContains(ModelPath, "sourcepawn_com/silah") != -1)
 			{
 				RemoveEntity(i);
 			}
