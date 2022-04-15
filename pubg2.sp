@@ -88,7 +88,7 @@ public Action Pubg0(int client, int args)
 			bool muteliymis[MAXPLAYERS+1] = {false, ...};
 			if(BaseComm_IsClientMuted(player))
 				muteliymis[player] = true;
-			SetListenOverride(muteliymis[player], player, Listen_No);
+			SetListenOverride(player, muteliymis[player], Listen_No);
 		}
 	}
 	else
@@ -223,6 +223,12 @@ public int TakimMenuCallBack(Menu menu, MenuAction action, int client, int posit
 			PrintToChat(g_iTeammates[client], "[SM] \x10%N \x01Takımdan ayrıldı!", client);
 			g_iTeammates[client] = 0;
 			g_iTeammates[g_iTeammates[client]] = 0;
+
+			LoopAllTerrorist(i)
+			{
+				SetListenOverride(i, client, Listen_Yes);
+				SetListenOverride(i, g_iTeammates[client], Listen_Yes);
+			}
 		}
 		else
 		{
