@@ -27,7 +27,7 @@ char g_szWeapons[][] = {
 Handle ARRAY_Spawns;
 
 int g_iBeamSprite = -1, g_iHaloSprite = -1;
-int g_kacinci, g_iTeammates[MAXPLAYERS + 1] = { 0 };
+int g_iTeammates[MAXPLAYERS + 1] = { 0 };
 int hazirlanma = 40;
 int g_okacinci;
 
@@ -93,6 +93,11 @@ public Action Pubg0(int client, int args)
 		SetCvar("mp_teammates_are_enemies", 0);
 		SetCvar("mp_friendlyfire", 0);
 		SilahTemizle();
+		LoopAllTerrorist(i)
+		{
+			SetEntityMoveType(i, MOVETYPE_WALK);
+			GivePlayerItem(i,"weapon_knife");
+		}
 		YeriTemizle();
 		foreachPlayer(player)
 		{
@@ -104,7 +109,6 @@ public Action Pubg0(int client, int args)
 			if (BaseComm_IsClientMuted(player))
 				muteliymis[player] = true;
 			SetListenOverride(player, muteliymis[player], Listen_No);
-			SetEntityMoveType(player, MOVETYPE_WALK);
 		}
 	}
 	else
@@ -144,7 +148,7 @@ stock void RastgeleIsinla(int oyuncu)
 	GetTrieValue(positions, POSITION_X, newSpawn[0]);
 	GetTrieValue(positions, POSITION_Y, newSpawn[1]);
 	GetTrieValue(positions, POSITION_Z, newSpawn[2]);
-
+	
 	TeleportEntity(oyuncu, newSpawn, NULL_VECTOR, NULL_VECTOR);
 }
 
@@ -383,6 +387,9 @@ public Action PubgAyar(int client, int args)
 		menu.CurrentKey = 5;
 		menu.DrawItem("✦ Oyuncu Konumu Sil");
 		menu.DrawText("▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬");
+		menu.CurrentKey = 6;
+		menu.DrawItem("✦ Konumları Kaydet");
+		menu.DrawText("▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬");
 		menu.CurrentKey = 9;
 		menu.DrawItem("➔ Kapat");
 		menu.Send(client, AyarMenu, MENU_TIME_FOREVER);
@@ -409,7 +416,7 @@ public int AyarMenu(Menu menu, MenuAction action, int client, int item)
 			
 			KeyValues kv = new KeyValues("pubgsilah");
 			kv.ImportFromFile(dosyayolu);
-			Format(format, sizeof(format), "%i", g_kacinci);
+			Format(format, sizeof(format), "%i", GetRandomInt(0, 100000));
 			kv.JumpToKey(format, true);
 			float origin[3] = 0.0;
 			GetClientAimText(client, origin);
@@ -417,7 +424,6 @@ public int AyarMenu(Menu menu, MenuAction action, int client, int item)
 			kv.Rewind();
 			kv.ExportToFile(dosyayolu);
 			delete kv;
-			g_kacinci++;
 			PrintCenterText(client, "Pubg silah ayarı başarı ile yapıldı.");
 			PubgAyar(client, 0);
 		}
@@ -437,7 +443,7 @@ public int AyarMenu(Menu menu, MenuAction action, int client, int item)
 			PrintCenterText(client, "Pubg oyuncu spawn noktası ayarı başarı ile yapıldı.");
 			
 			SaveConfiguration();
-
+			
 			PubgAyar(client, 0);
 		}
 		else if (item == 4)
@@ -452,21 +458,28 @@ public int AyarMenu(Menu menu, MenuAction action, int client, int item)
 				PrintCenterText(client, "Pubg silah spawn noktaları sıfırlandı.");
 			}
 			PubgAyar(client, 0);
-			g_kacinci = 0;
 		}
 		else if (item == 5)
 		{
 			char map[64];
 			GetCurrentMap(map, sizeof(map));
 			StringToLowerCase(map);
-			BuildPath(Path_SM, dosyayolu, sizeof(dosyayolu), "configs/pubgalan/%s_oyuncu.txt", map);
+			BuildPath(Path_SM, dosyayolu, sizeof(dosyayolu), "configs/pubgalan/%s_oyuncu.cfg", map);
 			if (FileExists(dosyayolu))
 			{
+				ClearArray(ARRAY_Spawns);
 				DeleteFile(dosyayolu);
 				PrintCenterText(client, "Pubg oyuncu spawn noktaları sıfırlandı.");
 			}
 			PubgAyar(client, 0);
 			g_okacinci = 0;
+		}
+		else if (item == 6)
+		{
+			char filename[64];
+			GetPluginFilename(INVALID_HANDLE, filename, sizeof(filename));
+			ServerCommand("sm plugins reload %s", filename);
+			PrintCenterText(client, "Pubg konumları başarılı bir şekilde kaydedildi.");
 		}
 	}
 	else if (action == MenuAction_End)
@@ -700,20 +713,6 @@ stock void ClearWeaponEx(int client)
 			RemoveEntity(wepIdx);
 		}
 	}
-}
-
-stock void ClearWeapon(int client)
-{
-	for (int j = 0; j < 12; j++)
-	{
-		int weapon = GetPlayerWeaponSlot(client, j);
-		if (weapon != -1)
-		{
-			RemovePlayerItem(client, weapon);
-			RemoveEntity(weapon);
-		}
-	}
-	GivePlayerItem(client, "weapon_knife");
 }
 
 stock void YeriTemizle()
