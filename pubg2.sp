@@ -38,7 +38,7 @@ ConVar g_hazirlanma = null;
 public Plugin myinfo = 
 {
 	name = "PUBG Oyunu", 
-	author = "phiso", 
+	author = "phiso, hibna", 
 	description = "Jailbreak modu için pubg oyunu", 
 	version = "1.0", 
 	url = "sourcepawn.com"
