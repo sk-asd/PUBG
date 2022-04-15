@@ -96,9 +96,9 @@ public Action Pubg0(int client, int args)
 		LoopAllTerrorist(i)
 		{
 			SetEntityMoveType(i, MOVETYPE_WALK);
+			ClearWeaponEx(i);
 			GivePlayerItem(i,"weapon_knife");
 		}
-		YeriTemizle();
 		foreachPlayer(player)
 		{
 			SDKUnhook(player, SDKHook_OnTakeDamage, OnTakeDamage);
@@ -719,7 +719,7 @@ stock void YeriTemizle()
 {
 	int iEnt = MaxClients + 1;
 	
-	while ((iEnt = FindEntityByClassname(iEnt, "weapon_*")) != -1)
+	while ((iEnt = FindEntityByClassname(iEnt, "weapon_*")) != -1 && iEnt == FL_ONGROUND)
 		AcceptEntityInput(iEnt, "Kill");
 }
 
