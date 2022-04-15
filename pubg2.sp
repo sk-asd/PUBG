@@ -5,6 +5,7 @@
 
 #pragma semicolon 1
 #pragma newdecls required
+#pragma tabsize 0
 
 #define T           2   /**< Terrorists. */
 #define CT          3   /**< Counter-Terrorists. */
@@ -14,7 +15,6 @@
 #define POSITION_Y                "POSITION_Y"
 #define POSITION_Z                "POSITION_Z"
 #define PLUGIN_TAG                "[Sourcepawn.com]"
-#define CUSTOM_SPAWN_ENABLED    "CUSTOM_SPAWN_ENABLED"
 
 char dosyayolu[PLATFORM_MAX_PATH];
 
@@ -79,6 +79,8 @@ public void OnPluginStart()
 	RegConsoleCmd("sm_pubgtakimol", CMD_PubgTakim);
 	
 	HookEvent("player_death", Event_PlayerDeath);
+	HookEvent("round_start", elbasladibitti);
+	HookEvent("round_end", elbasladibitti);
 	
 	BuildPath(Path_SM, dosyayolu, sizeof(dosyayolu), "configs/pubgalan");
 	if (!DirExists(dosyayolu))
@@ -92,7 +94,9 @@ public void OnPluginStart()
 	AutoExecConfig(true, "PUBG", "Sourcepawn.Com");
 }
 
-public void hazirdegisti(ConVar convar, const char[] oldValue, const char[] newValue){hazirlanma = StringToInt(newValue);}
+public Action elbasladibitti(Event event, const char[] name, bool db) { g_bAktif = false; hazirlanma = -1; SetCvar("mp_teammates_are_enemies", 0); SetCvar("mp_friendlyfire", 0); SilahTemizle(); foreachPlayer(player) { SetEntityMoveType(player, MOVETYPE_WALK); SDKUnhook(player, SDKHook_OnTakeDamage, OnTakeDamage); g_iTeammates[player] = 0; PrintToChat(player, "[SM] \x02%N \x04isimli yetkili pubg oyununu durdurdu!"); SetListenOverride(player, player, Listen_Yes); bool muteliymis[MAXPLAYERS + 1] = { false, ... }; if (BaseComm_IsClientMuted(player)) { muteliymis[player] = true; } SetListenOverride(player, muteliymis[player], Listen_No); } }
+
+public void hazirdegisti(ConVar convar, const char[] oldValue, const char[] newValue) { hazirlanma = StringToInt(newValue); }
 
 public Action Pubg0(int client, int args)
 {
