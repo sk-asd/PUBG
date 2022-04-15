@@ -1,26 +1,3 @@
-/*
-	Semboller
-	
-	☆	
-	✯
-	✧
-	✦
-	♢
-	♦
-	☝
-	☟
-	☞
-	☜
-	➔
-	»
-	›
-	«
-	‹
-	·
-	•
-	●
-*/
-
 #include <sourcemod>
 #include <sdktools>
 #include <sdkhooks>
@@ -31,14 +8,17 @@
 #define T           2   /**< Terrorists. */
 #define CT          3   /**< Counter-Terrorists. */
 #define LoopAllTerrorist(%1) for (int %1 = 1; %1 <= MaxClients; %1++) if (IsClientInGame(%1) && GetClientTeam(%1) == T)
+#define foreachPlayer(%1) for (int %1 = 1; %1 <= MaxClients; %1++) if (IsClientInGame(%1) && !IsFakeClient(%1))
 
 char dosyayolu[PLATFORM_MAX_PATH];
 char silahlar[11][32] = { "weapon_ak47", "weapon_m4a1_silencer", "weapon_m4a1", "weapon_famas", "weapon_mag7", "weapon_mp7", "weapon_ump45", "weapon_bizon", "weapon_mp5sd", "weapon_mac10", "weapon_mp9" };
 
 int g_iBeamSprite = -1, g_iHaloSprite = -1;
-int g_kacinci, g_iTeammates[MAXPLAYERS + 1] =  { 0 };
+int g_kacinci, g_iTeammates[MAXPLAYERS + 1] = { 0 };
+int hazirlanma = 40;
 
 bool g_bAktif = false;
+//SetListenOverride() takım arası konuşma
 
 public Plugin myinfo = 
 {
@@ -70,6 +50,7 @@ public void OnPluginStart()
 {
 	RegConsoleCmd("sm_pubgayarla", PubgAyar);
 	RegConsoleCmd("sm_pubgphiso", PubgBaslat);
+	RegConsoleCmd("sm_pubgphiso0", Pubg0);
 	RegConsoleCmd("sm_pubgtakimol", CMD_PubgTakim);
 	
 	BuildPath(Path_SM, dosyayolu, sizeof(dosyayolu), "configs/pubgalan");
@@ -77,25 +58,136 @@ public void OnPluginStart()
 		CreateDirectory(dosyayolu, 0o777);
 }
 
-public Action CMD_PubgTakim(int client, int args)
+public Action Pubg0(int client, int args)
+{
+	if (g_bAktif == true)
+	{
+		g_bAktif = false;
+		hazirlanma = -1;
+		SetCvar("mp_teammates_are_enemies", 0);
+		SetCvar("mp_friendlyfire", 0);
+		SilahTemizle();
+		foreachPlayer(player)
+		{
+			if (IsValidClient(player))
+			{
+				SDKUnhook(player, SDKHook_OnTakeDamage, OnTakeDamage);
+				g_iTeammates[player] = 0;
+				PrintToChat(player, "[SM] \x02%N \x04isimli yetkili pubg oyununu durdurdu!");
+				ClearWeaponEx(player);
+				GivePlayerItem(player, "weapon_knife");
+			}
+		}
+	}
+	else
+	{
+		PrintToChat(client, "[SM] \x04Şu anda zaten bir \x02pubg \x04oyunu oynanmıyor!");
+	}
+}
+
+public Action PubgBaslat(int client, int args)
 {
 	if (g_bAktif == false)
 	{
+		hazirlanma = 40;
+		g_bAktif = true;
+		CreateTimer(1.0, countdown, _, TIMER_FLAG_NO_MAPCHANGE | TIMER_REPEAT);
+		PrintToChatAll("[SM] \x02%N \x04Pubg oyununu başlattı!", client);
+		YeriTemizle();
+		LoopAllTerrorist(i)
+		{
+			ClearWeaponEx(i);
+		}
+	}
+	else
+	{
+		PrintToChat(client, "[SM] \x04Şu an bir \x02pubg \x04oyunu oynanıyor!");
+	}
+}
+
+public Action countdown(Handle timer)
+{
+	if (hazirlanma == -1 || !g_bAktif)
+	{
+		return Plugin_Stop;
+	}
+	
+	if (hazirlanma == 0)
+	{
+		KeyValues kv = CreateKeyValues("pubgsilah");
+		char map[64];
+		float origin[3] = 0.0;
+		GetCurrentMap(map, sizeof(map));
+		StringToLowerCase(map);
+		BuildPath(Path_SM, dosyayolu, sizeof(dosyayolu), "configs/pubgalan/%s_silah.txt", map);
+		FileToKeyValues(kv, dosyayolu);
+		if (!kv.GotoFirstSubKey())
+		{
+			delete kv;
+			return Plugin_Handled;
+		}
+		do
+		{
+			kv.GetVector("Koordinat", origin); //modelspawn yapılacak
+			SilahOlustur(origin, "models/Plugincim_com/PUBG/silah.mdl");
+		}
+		while (kv.GotoNextKey());
+		delete kv;
+		hazirlanma = -1;
+		char sBuffer[512];
+		Format(sBuffer, sizeof(sBuffer), "<font color='#FF0000'>!-</font> <font color='#00FF00'>PUBG OYUNU BAŞLADI</font> <font color='#FF0000'>-!</font>");
+		ShowStatusMessage(-1, sBuffer, 2);
+		SetCvar("mp_teammates_are_enemies", 1);
+		SetCvar("mp_friendlyfire", 1);
+		LoopAllTerrorist(i)
+		{
+			ClearWeaponEx(i);
+			int taser = CreateEntityByName("weapon_fists");
+			if (taser != -1)
+			{
+				DispatchSpawn(taser);
+				EquipPlayerWeapon(i, taser);
+			}
+		}
+		return Plugin_Handled;
+	}
+	else
+	{
+		if (hazirlanma >= 1)
+		{
+			hazirlanma--;
+			char sBuffer[512];
+			Format(sBuffer, sizeof(sBuffer), "<font color='#00FF00'>%d</font> <font color='#FF0000'>saniye sonra oyun başlayacak!</font>", hazirlanma);
+			ShowStatusMessage(-1, sBuffer, 2);
+			PrintHintTextToAll("<font size='20' color='#00FF00'>%d</font> <font size='20' color='#FF0000'>saniye sonra oyun başlayacak</font>", hazirlanma);
+			return Plugin_Continue;
+		}
+	}
+	return Plugin_Handled;
+}
+
+public Action CMD_PubgTakim(int client, int args)
+{
+	if (hazirlanma != -1)
+	{
 		if (g_iTeammates[client] == 0)
 		{
-			Menu takimm = new Menu(TakimMenuCallBack);
-			takimm.SetTitle("[PUBG] Takım Menüsü");
-			LoopAllTerrorist(i)
+			if (GetClientTeam(client) == T)
 			{
-				if (IsPlayerAlive(i) && i != client)
+				Menu takimm = new Menu(TakimMenuCallBack);
+				takimm.SetTitle("[PUBG] Takım Menüsü");
+				LoopAllTerrorist(i)
 				{
-					char name[32], id[32];
-					GetClientName(i, name, 32);
-					FormatEx(id, 32, "%d", GetClientUserId(i));
-					takimm.AddItem(id, name);
+					if (IsPlayerAlive(i) && i != client)
+					{
+						char name[32], id[32];
+						GetClientName(i, name, 32);
+						FormatEx(id, 32, "%d", GetClientUserId(i));
+						takimm.AddItem(id, name);
+					}
 				}
+				takimm.Display(client, MENU_TIME_FOREVER);
 			}
-			takimm.Display(client, MENU_TIME_FOREVER);
 		}
 		else
 		{
@@ -151,7 +243,7 @@ public int OnayMenuCallBack(Menu menu, MenuAction action, int client, int itemNu
 			GetClientAbsOrigin(g_iTeammates[client], vecPosition);
 			PrintToChatAll("[SM] \x10%N \x01adlı oyuncu ile \x10%N \x01Takım oldu!", client, g_iTeammates[client]);
 			TeleportEntity(client, vecPosition, NULL_VECTOR, NULL_VECTOR);
-
+			
 			SDKHook(client, SDKHook_OnTakeDamage, OnTakeDamage);
 			SDKHook(g_iTeammates[client], SDKHook_OnTakeDamage, OnTakeDamage);
 		}
@@ -181,35 +273,6 @@ public Action OnTakeDamage(int victim, int &attacker, int &inflictor, float &dam
 	return Plugin_Continue;
 }
 
-public Action PubgBaslat(int client, int args)
-{
-	if (IsValidClient(client))
-	{
-		KeyValues kv = CreateKeyValues("pubgsilah");
-		char map[64];
-		float origin[3] = 0.0;
-		GetCurrentMap(map, sizeof(map));
-		StringToLowerCase(map);
-		BuildPath(Path_SM, dosyayolu, sizeof(dosyayolu), "configs/pubgalan/%s_silah.txt", map);
-		FileToKeyValues(kv, dosyayolu);
-		if (!kv.GotoFirstSubKey())
-		{
-			PrintToChat(client, "Sunucunda oluşturulmuş herhangi bir alan bulunmamaktadır.");
-			delete kv;
-			return Plugin_Handled;
-		}
-		do
-		{
-			kv.GetVector("Koordinat", origin); //modelspawn yapılacak
-			SilahOlustur(origin, "models/Plugincim_com/PUBG/silah.mdl");
-		}
-		while (kv.GotoNextKey());
-		delete kv;
-		return Plugin_Handled;
-	}
-	return Plugin_Continue;
-}
-
 public Action OnStartTouch(int entity, int client)
 {
 	//if (OyunOynaniyor)
@@ -227,13 +290,6 @@ public Action OnStartTouch(int entity, int client)
 			EmitSoundToClient(client, "sourcepawn_com/silah.mp3");
 		}
 	}
-}
-
-public Action Remove_Entity(Handle timer, int entity)
-{
-	if (IsValidEntity(entity))
-		RemoveEntity(entity);
-	return Plugin_Stop;
 }
 
 public Action PubgAyar(int client, int args)
@@ -464,3 +520,89 @@ stock void Give_Effect(int client, int Color[4])
 	pb.SetColor("clr", Color);
 	EndMessage();
 } // efekt verilecek
+
+stock void SetCvar(char[] cvarName, int value)
+{
+	ConVar IntCvar = FindConVar(cvarName);
+	if (IntCvar == null)return;
+	int flags = IntCvar.Flags;
+	flags &= ~FCVAR_NOTIFY;
+	IntCvar.Flags = flags;
+	IntCvar.IntValue = value;
+	flags |= FCVAR_NOTIFY;
+	IntCvar.Flags = flags;
+}
+
+public Action Remove_Entity(Handle timer, int entity)
+{
+	if (IsValidEntity(entity))
+		RemoveEntity(entity);
+	return Plugin_Stop;
+}
+
+stock void ShowStatusMessage(int client = -1, const char[] message = NULL_STRING, int hold = 1)
+{
+	Event show_survival_respawn_status = CreateEvent("show_survival_respawn_status");
+	if (show_survival_respawn_status != null)
+	{
+		show_survival_respawn_status.SetString("loc_token", message);
+		show_survival_respawn_status.SetInt("duration", hold);
+		show_survival_respawn_status.SetInt("userid", -1);
+		if (client == -1)
+		{
+			foreachPlayer(player)
+			{
+				show_survival_respawn_status.FireToClient(player);
+			}
+		}
+		else
+		{
+			if (!IsFakeClient(client))
+				show_survival_respawn_status.FireToClient(client);
+		}
+		show_survival_respawn_status.Cancel();
+	}
+}
+
+stock void SilahTemizle()
+{
+	char ModelPath[PLATFORM_MAX_PATH];
+	for (int i = MaxClients; i < GetMaxEntities(); i++)
+	{
+		if (IsValidEdict(i) && IsValidEntity(i))
+		{
+			GetEntPropString(i, Prop_Data, "m_ModelName", ModelPath, sizeof(ModelPath));
+			if (StrContains(ModelPath, "Plugincim_com/PUBG/silah") != -1)
+			{
+				RemoveEntity(i);
+			}
+		}
+	}
+} 
+
+stock void ClearWeaponEx(int client)
+{
+	int wepIdx;
+	for (int i; i < 12; i++)
+	{
+		while ((wepIdx = GetPlayerWeaponSlot(client, i)) != -1)
+		{
+			RemovePlayerItem(client, wepIdx);
+			RemoveEntity(wepIdx);
+		}
+	}
+}
+
+stock void YeriTemizle()
+{
+    int g_WeaponParent = FindSendPropInfo("CBaseCombatWeapon", "m_hOwnerEntity");
+    int maxent = GetMaxEntities(); char weapon[64];
+    for(int i = MaxClients; i < maxent; i++)
+    {
+        if (IsValidEdict(i) && IsValidEntity(i))
+        {
+            GetEdictClassname(i, weapon, sizeof(weapon));
+            if((StrContains(weapon, "weapon_") != -1 || StrContains(weapon, "item_") != -1) && GetEntDataEnt2(i, g_WeaponParent) == -1)RemoveEdict(i);
+        }
+    }
+}
