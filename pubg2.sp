@@ -2,6 +2,7 @@
 #include <sdktools>
 #include <sdkhooks>
 #include <basecomm>
+#include <overlays>
 
 #pragma semicolon 1
 #pragma newdecls required
@@ -30,6 +31,7 @@ int g_iBeamSprite = -1, g_iHaloSprite = -1;
 int g_iTeammates[MAXPLAYERS + 1] = { 0 };
 int hazirlanma;
 int g_okacinci;
+int kacles[MAXPLAYERS];
 
 bool g_bAktif = false;
 
@@ -59,9 +61,13 @@ public void OnMapStart()
 	AddFileToDownloadsTable("materials/models/sourcepawn_com/pubg_silah.vmt");
 	AddFileToDownloadsTable("materials/models/sourcepawn_com/pubg_silah.vtf");
 	PrecacheModel("models/sourcepawn_com/PUBG/silah.mdl");
+	AddFileToDownloadsTable("materials/sourcepawn_com/br_winner.vtf");
+	AddFileToDownloadsTable("materials/sourcepawn_com/br_winner.vmt");
 	
 	AddFileToDownloadsTable("sound/sourcepawn_com/silah.mp3");
 	PrecacheSound("sourcepawn_com/silah.mp3");
+	AddFileToDownloadsTable("sound/sourcepawn_com/winnersound.mp3");
+	PrecacheSound("sourcepawn_com/winnersound.mp3");
 	PrecacheSound("buttons/button14.wav");
 	
 	LoadConfiguration(mapName);
@@ -530,6 +536,7 @@ public Action Event_PlayerDeath(Handle event, const char[] name, bool dontBroadc
 		int client = GetClientOfUserId(GetEventInt(event, "userid"));
 		int attacker = GetClientOfUserId(GetEventInt(event, "attacker"));
 		int takimarkadasi = g_iTeammates[attacker];
+		kacles[attacker]++;
 		
 		if (IsValidClient(client))
 			g_iTeammates[client] = 0;
@@ -544,6 +551,16 @@ public Action Event_PlayerDeath(Handle event, const char[] name, bool dontBroadc
 		{
 			PrintToChatAll("[SM] \x01PUBG Oyunu bitti! \x10%N \x01oyunu kazandı!", attacker);
 			ServerCommand("sm_pubgphiso0");
+			char format[512], attname[32];
+			GetClientName(attacker, attname, sizeof(attname));
+			Format(format, sizeof(format), "Oyun bitti. %i leş ile %s kazandı, tebrikler!", kacles[attacker], attname);
+			ShowStatusMessage(-1, format, 5);
+			foreachPlayer(i)
+			{
+				ShowOverlay(i, "sourcepawn_com/br_winner", 5.0);
+				EmitSoundToClient(i, "sourcepawn_com/winnersound.mp3");
+			}
+			//overlay + bitiş sesi
 		}
 		else if (yasayant == 2)
 		{
