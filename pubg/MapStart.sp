@@ -5,6 +5,7 @@ public void OnMapStart()
 	
 	g_iBeamSprite = PrecacheModel("materials/sprites/laserbeam.vmt");
 	g_iHaloSprite = PrecacheModel("materials/sprites/glow06.vmt");
+	g_iPathLaserModelIndex = PrecacheModel(MODEL_BEAM);
 	
 	PrecacheModel("models/props_survival/cases/case_random_drop.mdl");
 	
