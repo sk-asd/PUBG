@@ -38,10 +38,10 @@ public void OnPluginStart()
 	if (!DirExists(dosyayolu))
 		CreateDirectory(dosyayolu, 0o777);
 	
-	ARRAY_Spawns = CreateArray();
+	ARRAY_Spawns = new ArrayList();
 	
 	g_hazirlanma = CreateConVar("sm_pubgg_hazirlanma", "20", "Pubgye hazırlanmaları için kaç saniyeleri olsun?");
-	HookConVarChange(g_hazirlanma, hazirdegisti);
+	g_hazirlanma.AddChangeHook(hazirdegisti);
 	
 	AutoExecConfig(true, "PUBG", "Sourcepawn.Com");
 }
@@ -407,7 +407,6 @@ public int AyarMenu(Menu menu, MenuAction action, int client, int item)
 		{
 			float newSpawn[3];
 			GetClientAimText(client, newSpawn);
-			g_okacinci++;
 			SaveLocation(newSpawn);
 			PrintCenterText(client, "Pubg oyuncu spawn noktası ayarı başarı ile yapıldı.");
 			PubgAyar(client, 0);
@@ -431,20 +430,15 @@ public int AyarMenu(Menu menu, MenuAction action, int client, int item)
 			GetCurrentMap(map, sizeof(map));
 			StringToLowerCase(map);
 			BuildPath(Path_SM, dosyayolu, sizeof(dosyayolu), "configs/pubgalan/%s_oyuncu.cfg", map);
-			if (FileExists(dosyayolu))
-			{
+			if (FileExists(dosyayolu)) {
 				ARRAY_Spawns.Clear();
 				DeleteFile(dosyayolu);
 				PrintCenterText(client, "Pubg oyuncu spawn noktaları sıfırlandı.");
 			}
 			PubgAyar(client, 0);
-			g_okacinci = 0;
 		}
 		else if (item == 6)
 		{
-			//char filename[64];
-			//GetPluginFilename(INVALID_HANDLE, filename, sizeof(filename));
-			//ServerCommand("sm plugins reload %s", filename);
 			SaveConfiguration();
 			PrintCenterText(client, "Pubg konumları başarılı bir şekilde kaydedildi.");
 		}
