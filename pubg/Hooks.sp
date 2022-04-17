@@ -14,6 +14,20 @@ public Action OnStartTouch(int entity, int client)
 			
 			EmitSoundToClient(client, "sourcepawn_com/silah.mp3");
 		}
+		
+		char ModelPath[PLATFORM_MAX_PATH];
+		GetEntPropString(entity, Prop_Data, "m_ModelName", ModelPath, sizeof(ModelPath));
+		if (StrContains(ModelPath, "models/enhancedrockets2/w_rocket_original.mdl") != -1 || StrContains(ModelPath, "enhancedrockets2/w_rocket_original.mdl") != -1)
+		{
+			GetEntPropVector(entity, Prop_Send, "m_vecOrigin", ah);
+			CS_CreateExplosion(100, 700, ah);
+			ikincisira[0] = ah[0];
+			ikincisira[1] = ah[1];
+			ikincisira[2] = ah[2];
+			AcceptEntityInput(entity, "Kill");
+			CreateTimer(0.0, Remove_Entity, entity);
+			CreateTimer(0.1, HelKontrol, _, TIMER_FLAG_NO_MAPCHANGE);
+		}
 	}
 }
 
@@ -154,4 +168,4 @@ public Action elbasladibitti(Event event, const char[] name, bool db)
 	}
 }
 
-public void hazirdegisti(ConVar convar, const char[] oldValue, const char[] newValue) { hazirlanma = StringToInt(newValue); } 
+public void hazirdegisti(ConVar convar, const char[] oldValue, const char[] newValue) { hazirlanma = StringToInt(newValue); }
