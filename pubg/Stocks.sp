@@ -195,23 +195,22 @@ stock void SaveConfiguration()
 	BuildPath(Path_SM, path, sizeof(path), "configs/pubgalan/%s_oyuncu.cfg", mapName);
 	if (!FileExists(path))
 	{
-		Handle file = OpenFile(path, "w");
-		CloseHandle(file);
+		File file = OpenFile(path, "w");
+		delete file;
 	}
 	
-	
-	Handle file = OpenFile(path, "r+");
+	File file = OpenFile(path, "r+");
+	Handle trie = null;
+	float P[3] = { 0.0, ... };
 	for (int i = 0; i < GetArraySize(ARRAY_Spawns); i++)
 	{
-		Handle trie = GetArrayCell(ARRAY_Spawns, i);
-		float Px = 0.0;
-		float Py = 0.0;
-		float Pz = 0.0;
-		GetTrieValue(trie, POSITION_X, Px);
-		GetTrieValue(trie, POSITION_Y, Py);
-		GetTrieValue(trie, POSITION_Z, Pz);
-		WriteFileLine(file, "%f;%f;%f", Px, Py, Pz);
+		trie = GetArrayCell(ARRAY_Spawns, i);
+		GetTrieValue(trie, POSITION_X, P[0]);
+		GetTrieValue(trie, POSITION_Y, P[1]);
+		GetTrieValue(trie, POSITION_Z, P[2]);
+		file.WriteLine("%f;%f;%f", P[0], P[1], P[2]);
 	}
+	delete file;
 }
 
 stock void LoadConfiguration(const char[] mapName)
@@ -222,33 +221,29 @@ stock void LoadConfiguration(const char[] mapName)
 	if (!DirExists("addons/sourcemod/configs/pubgalan"))
 		CreateDirectory("/addons/sourcemod/configs/pubgalan", 0o777);
 	
-	Handle file;
+	File file;
 	if (!FileExists(path))
 		file = OpenFile(path, "w+");
 	else
 		file = OpenFile(path, "r");
 	
 	char line[200];
-	ClearArray(ARRAY_Spawns);
+	ARRAY_Spawns.Clear();
 	
-	while (!IsEndOfFile(file) && ReadFileLine(file, line, sizeof(line)))
+	char positions[3][15];
+	StringMap trie = CreateTrie();
+	while (!file.EndOfFile() && file.ReadLine(line, sizeof(line)))
 	{
-		
-		char positions[3][15];
 		ExplodeString(line, ";", positions, sizeof positions, sizeof positions[]);
-		
-		Handle trie = CreateTrie();
-		SetTrieValue(trie, POSITION_X, StringToFloat(positions[0]));
-		SetTrieValue(trie, POSITION_Y, StringToFloat(positions[1]));
-		SetTrieValue(trie, POSITION_Z, StringToFloat(positions[2]));
-		
-		PushArrayCell(ARRAY_Spawns, trie);
+		trie.SetValue(POSITION_X, StringToFloat(positions[0]));
+		trie.SetValue(POSITION_Y, StringToFloat(positions[1]));
+		trie.SetValue(POSITION_Z, StringToFloat(positions[2]));
+		ARRAY_Spawns.Push(trie);
 		
 	}
-	CloseHandle(file);
+	delete file;
 	
 	g_okacinci = GetArraySize(ARRAY_Spawns);
-	
 	if (g_okacinci < 1)
 		PrintToServer("%s Oyuncu Spawn Konumu Bulunamadı !", PLUGIN_TAG);
 	else
@@ -267,17 +262,36 @@ void SpawnDrop(float pos[3])
 	DispatchSpawn(dropmodel);
 	TeleportEntity(dropmodel, pos, NULL_VECTOR, NULL_VECTOR);
 	SDKHook(dropmodel, SDKHook_OnTakeDamage, OnTakeDamage);
-} 
+}
 
 stock void RastgeleIsinla(int oyuncu)
 {
 	int spawnID = GetRandomInt(0, g_okacinci - 1);
-	Handle positions = GetArrayCell(ARRAY_Spawns, spawnID);
+	StringMap positions = GetArrayCell(ARRAY_Spawns, spawnID);
 	
 	float newSpawn[3];
-	GetTrieValue(positions, POSITION_X, newSpawn[0]);
-	GetTrieValue(positions, POSITION_Y, newSpawn[1]);
-	GetTrieValue(positions, POSITION_Z, newSpawn[2]);
+	positions.GetValue(POSITION_X, newSpawn[0]);
+	positions.GetValue(POSITION_Y, newSpawn[1]);
+	positions.GetValue(POSITION_Z, newSpawn[2]);
 	
 	TeleportEntity(oyuncu, newSpawn, NULL_VECTOR, NULL_VECTOR);
 }
+
+void SaveLocation(float Position[3]) {
+	StringMap trie = CreateTrie();
+	trie.SetValue(POSITION_X, Position[0]);
+	trie.SetValue(POSITION_Y, Position[1]);
+	trie.SetValue(POSITION_Z, Position[2]);
+	ARRAY_Spawns.Push(trie);
+	
+	char path[128], mapName[512];
+	GetCurrentMap(mapName, sizeof(mapName));
+	
+	BuildPath(Path_SM, path, sizeof(path), "configs/pubgalan/%s_oyuncu.cfg", mapName);
+	if (!FileExists(path)) {
+		File file = OpenFile(path, "w");
+		delete file;
+	}
+	File file = OpenFile(path, "r+");
+	file.WriteLine("%f;%f;%f", Position[0], Position[1], Position[2]);
+} 
