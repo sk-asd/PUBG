@@ -28,7 +28,6 @@ int g_iBeamSprite = -1,
 g_iHaloSprite = -1, 
 g_iTeammates[MAXPLAYERS + 1] = { 0, ... }, 
 hazirlanma = -1, 
-g_okacinci, 
 kacles[MAXPLAYERS] = { 0, ... }, 
 dropmodel = -1;
 
