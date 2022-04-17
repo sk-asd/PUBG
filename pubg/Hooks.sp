@@ -17,12 +17,12 @@ public Action OnStartTouch(int entity, int client)
 	}
 }
 
-public Action Event_PlayerDeath(Handle event, const char[] name, bool dontBroadcast)
+public Action Event_PlayerDeath(Event event, const char[] name, bool dontBroadcast)
 {
 	if (g_bAktif == true)
 	{
-		int client = GetClientOfUserId(GetEventInt(event, "userid"));
-		int attacker = GetClientOfUserId(GetEventInt(event, "attacker"));
+		int client = GetClientOfUserId(event.GetInt("userid"));
+		int attacker = GetClientOfUserId(event.GetInt("attacker"));
 		int takimarkadasi = 0;
 		kacles[attacker]++;
 		
