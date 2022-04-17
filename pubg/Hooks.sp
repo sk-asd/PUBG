@@ -17,12 +17,12 @@ public Action OnStartTouch(int entity, int client)
 	}
 }
 
-public Action Event_PlayerDeath(Handle event, const char[] name, bool dontBroadcast)
+public Action Event_PlayerDeath(Event event, const char[] name, bool dontBroadcast)
 {
 	if (g_bAktif == true)
 	{
-		int client = GetClientOfUserId(GetEventInt(event, "userid"));
-		int attacker = GetClientOfUserId(GetEventInt(event, "attacker"));
+		int client = GetClientOfUserId(event.GetInt("userid"));
+		int attacker = GetClientOfUserId(event.GetInt("attacker"));
 		int takimarkadasi = 0;
 		kacles[attacker]++;
 		
@@ -83,7 +83,7 @@ public Action Event_PlayerDeath(Handle event, const char[] name, bool dontBroadc
 
 public Action OnTakeDamage(int victim, int &attacker, int &inflictor, float &damage, int &damagetype, int &weapon, float damageForce[3], float damagePosition[3])
 {
-	if (g_bAktif == true)
+	if (g_bAktif)
 	{
 		if (g_iTeammates[attacker] == victim)
 		{
@@ -91,42 +91,37 @@ public Action OnTakeDamage(int victim, int &attacker, int &inflictor, float &dam
 			return Plugin_Changed;
 		}
 		
-		if (IsValidClient(attacker))
+		if (IsValidClient(attacker) && IsPlayerAlive(attacker) && IsValidEntity(victim))
 		{
-			if (IsPlayerAlive(attacker))
+			char ModelPath[PLATFORM_MAX_PATH];
+			GetEntPropString(victim, Prop_Data, "m_ModelName", ModelPath, sizeof(ModelPath));
+			if (StrContains(ModelPath, "models/props_survival/cases/case_random_drop.mdl") != -1 || StrContains(ModelPath, "props_survival/cases/case_random_drop.mdl") != -1)
 			{
-				if (IsValidEntity(victim))
+				can += damage;
+				if (can > 331.0)
 				{
-					char ModelPath[PLATFORM_MAX_PATH];
-					GetEntPropString(victim, Prop_Data, "m_ModelName", ModelPath, sizeof(ModelPath));
-					if (StrContains(ModelPath, "models/props_survival/cases/case_random_drop.mdl") != -1 || StrContains(ModelPath, "props_survival/cases/case_random_drop.mdl") != -1)
+					PrintToChatAll("[SM] \x10%N \x04Drop'u kırdı!", attacker);
+					silahlar[2] -= 500.0;
+					int ent = CreateEntityByName(g_OzelSilah[GetRandomInt(0, sizeof(g_OzelSilah) - 1)]);
+					DispatchSpawn(ent);
+					TeleportEntity(ent, silahlar, NULL_VECTOR, NULL_VECTOR);
+					ent = CreateEntityByName(g_OzelBombalar[GetRandomInt(0, sizeof(g_OzelBombalar) - 1)]);
+					DispatchSpawn(ent);
+					TeleportEntity(ent, silahlar, NULL_VECTOR, NULL_VECTOR);
+					ent = CreateEntityByName("weapon_healthshot");
+					DispatchSpawn(ent);
+					TeleportEntity(ent, silahlar, NULL_VECTOR, NULL_VECTOR);
+					
+					GetClientAbsOrigin(attacker, TargetOrigin);
+					float Distance = GetVectorDistance(TargetOrigin, silahlar);
+					if (Distance < 500.0)
 					{
-						can += damage;
-						if (can > 331.0)
-						{
-							PrintToChatAll("[SM] \x10%N \x04Drop'u kırdı!", attacker);
-							silahlar[2] -= 500.0;
-							GetClientAbsOrigin(attacker, TargetOrigin);
-							Distance = GetVectorDistance(TargetOrigin, silahlar);
-							int ak47 = CreateEntityByName(g_OzelSilah[GetRandomInt(0, sizeof(g_OzelSilah) - 1)]);
-							int bombe = CreateEntityByName(g_OzelBombalar[GetRandomInt(0, sizeof(g_OzelBombalar) - 1)]);
-							int shot = CreateEntityByName("weapon_healthshot");
-							DispatchSpawn(shot);
-							DispatchSpawn(ak47);
-							DispatchSpawn(bombe);
-							TeleportEntity(ak47, silahlar, NULL_VECTOR, NULL_VECTOR);
-							TeleportEntity(bombe, silahlar, NULL_VECTOR, NULL_VECTOR);
-							TeleportEntity(shot, silahlar, NULL_VECTOR, NULL_VECTOR);
-							can = 0.0;
-							SDKUnhook(victim, SDKHook_OnTakeDamage, OnTakeDamage);
-							dropvar = false;
-							if (Distance < 500.0)
-							{
-								SetEntProp(attacker, Prop_Data, "m_ArmorValue", 100, 4);
-								SetEntProp(attacker, Prop_Send, "m_bHasHelmet", 1);
-							}
-						}
+						SetEntProp(attacker, Prop_Data, "m_ArmorValue", 100, 4);
+						SetEntProp(attacker, Prop_Send, "m_bHasHelmet", 1);
 					}
+					can = 0.0;
+					SDKUnhook(victim, SDKHook_OnTakeDamage, OnTakeDamage);
+					dropvar = false;
 				}
 			}
 		}

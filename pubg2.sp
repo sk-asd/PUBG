@@ -38,86 +38,82 @@ public void OnPluginStart()
 	if (!DirExists(dosyayolu))
 		CreateDirectory(dosyayolu, 0o777);
 	
-	ARRAY_Spawns = CreateArray();
+	ARRAY_Spawns = new ArrayList();
 	
 	g_hazirlanma = CreateConVar("sm_pubgg_hazirlanma", "20", "Pubgye hazırlanmaları için kaç saniyeleri olsun?");
-	HookConVarChange(g_hazirlanma, hazirdegisti);
+	g_hazirlanma.AddChangeHook(hazirdegisti);
 	
 	AutoExecConfig(true, "PUBG", "Sourcepawn.Com");
 }
 
 public Action Pubg0(int client, int args)
 {
-	if (g_bAktif == true)
-	{
-		g_bAktif = false;
-		dropvar = false;
-		hazirlanma = -1;
-		SetCvar("mp_teammates_are_enemies", 0);
-		SetCvar("mp_friendlyfire", 0);
-		SilahTemizle();
-		YeriTemizle();
-		LoopAllTerrorist(i)
-		{
-			kacles[i] = 0;
-			SetEntityMoveType(i, MOVETYPE_WALK);
-			ClearWeaponEx(i);
-			GivePlayerItem(i, "weapon_knife");
-		}
-		foreachPlayer(player)
-		{
-			SDKUnhook(player, SDKHook_OnTakeDamage, OnTakeDamage);
-			g_iTeammates[player] = 0;
-			PrintToChat(player, "[SM] \x02%N \x04isimli yetkili pubg oyununu durdurdu!");
-			SetListenOverride(player, player, Listen_Yes);
-			bool muteliymis[MAXPLAYERS + 1] = { false, ... };
-			if (BaseComm_IsClientMuted(player))
-				muteliymis[player] = true;
-			SetListenOverride(player, muteliymis[player], Listen_No);
-		}
-	}
-	else
+	if (!g_bAktif)
 	{
 		PrintToChat(client, "[SM] \x04Şu anda zaten bir \x02pubg \x04oyunu oynanmıyor!");
+		return Plugin_Handled;
 	}
+	g_bAktif = false;
+	dropvar = false;
+	hazirlanma = -1;
+	SetCvar("mp_teammates_are_enemies", 0);
+	SetCvar("mp_friendlyfire", 0);
+	SilahTemizle();
+	YeriTemizle();
+	LoopAllTerrorist(i)
+	{
+		kacles[i] = 0;
+		SetEntityMoveType(i, MOVETYPE_WALK);
+		ClearWeaponEx(i);
+		GivePlayerItem(i, "weapon_knife");
+	}
+	foreachPlayer(player)
+	{
+		SDKUnhook(player, SDKHook_OnTakeDamage, OnTakeDamage);
+		g_iTeammates[player] = 0;
+		PrintToChat(player, "[SM] \x02%N \x04isimli yetkili pubg oyununu durdurdu!");
+		SetListenOverride(player, player, Listen_Yes);
+		bool muteliymis[MAXPLAYERS + 1] = { false, ... };
+		if (BaseComm_IsClientMuted(player))
+			muteliymis[player] = true;
+		SetListenOverride(player, muteliymis[player], Listen_No);
+	}
+	return Plugin_Handled;
 }
 
 public Action DropOlustur(int client, int args)
 {
-	if (warden_iswarden(client))
-	{
-		if (g_bAktif)
-		{
-			if (dropvar == false)
-			{
-				GetClientAimText(client, dropyeri);
-				dropyeri[2] += 500.0;
-				int cikti = 0;
-				while (TR_PointOutsideWorld(dropyeri)) {
-					cikti++;
-					dropyeri[2] -= 50.0;
-				}
-				silahlar[0] = dropyeri[0];
-				silahlar[1] = dropyeri[1];
-				silahlar[2] = cikti * 50 + dropyeri[2];
-				SpawnDrop(dropyeri);
-				dropvar = true;
-			}
-			else
-			{
-				PrintToChat(client, "[SM] \x04Şuan bir \x02drop \x04var!");
-			}
-		}
-		else
-		{
-			PrintToChat(client, "[SM] \x04Şuan \x02pubg \x04oynanmıyor!");
-		}
-	}
-	else
+	if (!warden_iswarden(client))
 	{
 		PrintToChat(client, "[SM] \x04Bu komutu kullanmak için \x0Bkomutçu \x04olmalısın!");
+		return Plugin_Handled;
 	}
+	if (!g_bAktif)
+	{
+		PrintToChat(client, "[SM] \x04Şuan \x02pubg \x04oynanmıyor!");
+		return Plugin_Handled;
+	}
+	if (dropvar)
+	{
+		PrintToChat(client, "[SM] \x04Şuan bir \x02drop \x04var!");
+		return Plugin_Handled;
+	}
+	
+	GetClientAimText(client, dropyeri);
+	dropyeri[2] += 500.0;
+	int cikti = 0;
+	while (TR_PointOutsideWorld(dropyeri)) {
+		cikti++;
+		dropyeri[2] -= 50.0;
+	}
+	silahlar[0] = dropyeri[0];
+	silahlar[1] = dropyeri[1];
+	silahlar[2] = cikti * 50 + dropyeri[2];
+	SpawnDrop(dropyeri);
+	dropvar = true;
+	return Plugin_Handled;
 }
+
 
 public Action PubgBaslat(int client, int args)
 {
@@ -157,7 +153,7 @@ public Action PubgBaslat(int client, int args)
 	}
 }
 
-public int callback(Menu menu, MenuAction action, int client, int item) { if (action == MenuAction_Select) {  } else if (action == MenuAction_End) {  } }
+public int callback(Menu menu, MenuAction action, int client, int item) { if (action == MenuAction_Select) {  } else if (action == MenuAction_End) { delete menu; } }
 
 public Action countdown(Handle timer)
 {
@@ -182,7 +178,7 @@ public Action countdown(Handle timer)
 		}
 		do
 		{
-			kv.GetVector("Koordinat", origin); //modelspawn yapılacak
+			kv.GetVector("Koordinat", origin); //modelspawn yapılacak tm
 			SilahOlustur(origin, "models/sourcepawn_com/silah.mdl");
 		}
 		while (kv.GotoNextKey());
@@ -269,7 +265,7 @@ public int TakimMenuCallBack(Menu menu, MenuAction action, int client, int posit
 			
 			SDKUnhook(client, SDKHook_OnTakeDamage, OnTakeDamage);
 			SDKUnhook(g_iTeammates[client], SDKHook_OnTakeDamage, OnTakeDamage);
-
+			
 			foreachPlayer(i)
 			{
 				SetListenOverride(i, client, Listen_Yes);
@@ -390,8 +386,8 @@ public int AyarMenu(Menu menu, MenuAction action, int client, int item)
 			BuildPath(Path_SM, dosyayolu, sizeof(dosyayolu), "configs/pubgalan/%s_silah.txt", map);
 			if (!FileExists(dosyayolu))
 			{
-				Handle file = OpenFile(dosyayolu, "w+");
-				CloseHandle(file);
+				File file = OpenFile(dosyayolu, "w+");
+				delete file;
 			}
 			
 			KeyValues kv = new KeyValues("pubgsilah");
@@ -411,17 +407,8 @@ public int AyarMenu(Menu menu, MenuAction action, int client, int item)
 		{
 			float newSpawn[3];
 			GetClientAimText(client, newSpawn);
-			g_okacinci++;
-			
-			Handle trie = CreateTrie();
-			SetTrieValue(trie, POSITION_X, newSpawn[0]);
-			SetTrieValue(trie, POSITION_Y, newSpawn[1]);
-			SetTrieValue(trie, POSITION_Z, newSpawn[2]);
-			PushArrayCell(ARRAY_Spawns, trie);
-			
+			SaveLocation(newSpawn);
 			PrintCenterText(client, "Pubg oyuncu spawn noktası ayarı başarı ile yapıldı.");
-			
-			SaveConfiguration();
 			PubgAyar(client, 0);
 		}
 		else if (item == 4)
@@ -443,25 +430,19 @@ public int AyarMenu(Menu menu, MenuAction action, int client, int item)
 			GetCurrentMap(map, sizeof(map));
 			StringToLowerCase(map);
 			BuildPath(Path_SM, dosyayolu, sizeof(dosyayolu), "configs/pubgalan/%s_oyuncu.cfg", map);
-			if (FileExists(dosyayolu))
-			{
-				ClearArray(ARRAY_Spawns);
+			if (FileExists(dosyayolu)) {
+				ARRAY_Spawns.Clear();
 				DeleteFile(dosyayolu);
 				PrintCenterText(client, "Pubg oyuncu spawn noktaları sıfırlandı.");
 			}
 			PubgAyar(client, 0);
-			g_okacinci = 0;
 		}
 		else if (item == 6)
 		{
-			char filename[64];
-			GetPluginFilename(INVALID_HANDLE, filename, sizeof(filename));
-			ServerCommand("sm plugins reload %s", filename);
+			SaveConfiguration();
 			PrintCenterText(client, "Pubg konumları başarılı bir şekilde kaydedildi.");
 		}
 	}
 	else if (action == MenuAction_End)
-	{
-		
-	}
-}
+		delete menu;
+} 

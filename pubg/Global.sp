@@ -10,33 +10,30 @@
 char dosyayolu[PLATFORM_MAX_PATH];
 
 char g_szWeapons[][] = {
-    "weapon_ak47", "weapon_m4a1_silencer", "weapon_m4a1", "weapon_famas", "weapon_mag7", "weapon_p90", 
-    "weapon_deagle", "weapon_fiveseven", "weapon_ssg08", "weapon_taser", "weapon_breachcharge",
+	"weapon_ak47", "weapon_m4a1_silencer", "weapon_m4a1", "weapon_famas", "weapon_mag7", "weapon_p90", 
+	"weapon_deagle", "weapon_fiveseven", "weapon_ssg08", "weapon_taser", "weapon_breachcharge", 
 };
 
 char g_OzelSilah[][] = {
-    "weapon_ak47", "weapon_awp", "weapon_m4a1", "weapon_m4a1_silencer", "weapon_awp", "weapon_aug", 
+	"weapon_ak47", "weapon_awp", "weapon_m4a1", "weapon_m4a1_silencer", "weapon_awp", "weapon_aug", 
 };
 
 char g_OzelBombalar[][] = {
-    "weapon_hegrenade", "weapon_smokegrenade", "weapon_molotov", "weapon_tagrenade", "weapon_bumpmine", "weapon_breachcharge",
+	"weapon_hegrenade", "weapon_smokegrenade", "weapon_molotov", "weapon_tagrenade", "weapon_bumpmine", "weapon_breachcharge", 
 };
 
-Handle ARRAY_Spawns;
+ArrayList ARRAY_Spawns = null;
 
-int g_iBeamSprite = -1, g_iHaloSprite = -1;
-int g_iTeammates[MAXPLAYERS + 1] = { 0 };
-int hazirlanma;
-int g_okacinci;
-int kacles[MAXPLAYERS];
-int dropmodel;
+int g_iBeamSprite = -1, 
+g_iHaloSprite = -1, 
+g_iTeammates[MAXPLAYERS + 1] = { 0, ... }, 
+hazirlanma = -1, 
+kacles[MAXPLAYERS] = { 0, ... }, 
+dropmodel = -1;
 
-bool g_bAktif = false;
-bool dropvar = false;
+bool g_bAktif = false, 
+dropvar = false;
 
 ConVar g_hazirlanma = null;
 
-float can = 0.0;
-
-float dropyeri[3], silahlar[3];
-float TargetOrigin[3], Distance;
+float can = 0.0, dropyeri[3] = { 0.0, ... }, silahlar[3] = { 0.0, ... }, TargetOrigin[3] = { 0.0, ... }; 
