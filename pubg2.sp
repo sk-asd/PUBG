@@ -572,6 +572,17 @@ public Action Event_PlayerDeath(Handle event, const char[] name, bool dontBroadc
 					{
 						PrintToChatAll("[SM] \x01PUBG Oyunu bitti! \x10%N \x01ile \x10%N \x01oyunu kazandı!", attacker, takimarkadasi);
 						ServerCommand("sm_pubgphiso0");
+						char format[512], attname[32], tname[32];
+						GetClientName(attacker, attname, sizeof(attname));
+						GetClientName(takimarkadasi, tname, sizeof(tname));
+						int kaclesaldilar = kacles[attacker] + kacles[takimarkadasi];
+						Format(format, sizeof(format), "Oyun bitti. toplam %i leş ile %s ve %s kazandı, tebrikler!", kaclesaldilar, attname, tname);
+						ShowStatusMessage(-1, format, 5);
+						foreachPlayer(i)
+						{
+							ShowOverlay(i, "sourcepawn_com/br_winner", 5.0);
+							EmitSoundToClient(i, "sourcepawn_com/winnersound.mp3");
+						}
 					}
 				}
 			}
