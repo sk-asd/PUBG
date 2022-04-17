@@ -158,7 +158,7 @@ stock void SilahTemizle()
 		if (IsValidEdict(i) && IsValidEntity(i))
 		{
 			GetEntPropString(i, Prop_Data, "m_ModelName", ModelPath, sizeof(ModelPath));
-			if (StrContains(ModelPath, "sourcepawn_com/silah") != -1)
+			if (StrContains(ModelPath, "sourcepawn_com/silah") != -1 || StrContains(ModelPath, "models/props_vehicles/helicopter_rescue.mdl") != -1 || StrContains(ModelPath, "props_vehicles/helicopter_rescue.mdl") != -1)
 			{
 				RemoveEntity(i);
 			}
@@ -281,4 +281,4 @@ stock void RastgeleIsinla(int oyuncu)
 	positions.GetValue(POSITION_Z, newSpawn[2]);
 	
 	TeleportEntity(oyuncu, newSpawn, NULL_VECTOR, NULL_VECTOR);
-} 
+}
