@@ -213,6 +213,27 @@ stock void SaveConfiguration()
 	delete file;
 }
 
+void SaveLocation(float Position[3]) {
+	char path[128], mapName[512];
+	GetCurrentMap(mapName, sizeof(mapName));
+	
+	BuildPath(Path_SM, path, sizeof(path), "configs/pubgalan/%s_oyuncu.cfg", mapName);
+	if (!FileExists(path)) {
+		File file = OpenFile(path, "w");
+		delete file;
+	}
+	File file = OpenFile(path, "r+");
+	file.WriteLine("%f;%f;%f", Position[0], Position[1], Position[2]);
+	delete file;
+	PrintToChatAll("%f;%f;%f", Position[0], Position[1], Position[2]);
+	StringMap trie = CreateTrie();
+	trie.SetValue(POSITION_X, Position[0]);
+	trie.SetValue(POSITION_Y, Position[1]);
+	trie.SetValue(POSITION_Z, Position[2]);
+	ARRAY_Spawns.Push(trie);
+	PrintToChatAll("pushed");
+}
+
 stock void LoadConfiguration(const char[] mapName)
 {
 	char path[128];
@@ -275,23 +296,4 @@ stock void RastgeleIsinla(int oyuncu)
 	positions.GetValue(POSITION_Z, newSpawn[2]);
 	
 	TeleportEntity(oyuncu, newSpawn, NULL_VECTOR, NULL_VECTOR);
-}
-
-void SaveLocation(float Position[3]) {
-	StringMap trie = CreateTrie();
-	trie.SetValue(POSITION_X, Position[0]);
-	trie.SetValue(POSITION_Y, Position[1]);
-	trie.SetValue(POSITION_Z, Position[2]);
-	ARRAY_Spawns.Push(trie);
-	
-	char path[128], mapName[512];
-	GetCurrentMap(mapName, sizeof(mapName));
-	
-	BuildPath(Path_SM, path, sizeof(path), "configs/pubgalan/%s_oyuncu.cfg", mapName);
-	if (!FileExists(path)) {
-		File file = OpenFile(path, "w");
-		delete file;
-	}
-	File file = OpenFile(path, "r+");
-	file.WriteLine("%f;%f;%f", Position[0], Position[1], Position[2]);
 } 
