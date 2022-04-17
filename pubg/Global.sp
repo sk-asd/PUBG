@@ -6,6 +6,7 @@
 #define POSITION_X                "POSITION_X"
 #define POSITION_Y                "POSITION_Y"
 #define POSITION_Z                "POSITION_Z"
+#define MODEL_BEAM "materials/sprites/laserbeam.vmt"
 
 char dosyayolu[PLATFORM_MAX_PATH];
 
@@ -35,5 +36,21 @@ bool g_bAktif = false,
 dropvar = false;
 
 ConVar g_hazirlanma = null;
+ConVar g_cOnlyWarden = null;
 
 float can = 0.0, dropyeri[3] = { 0.0, ... }, silahlar[3] = { 0.0, ... }, TargetOrigin[3] = { 0.0, ... }; 
+
+float g_fexpcoordinate[3];
+float koordinat[3] = 0.0;
+float yeniaci[3];
+float aci[3] = 90.0;
+float ikincisira[3] = 0.0;
+float anan2[3] = 0.0;
+float ah[3] = 0.0;
+
+int g_iPathLaserModelIndex;
+int kac = 0;
+int kac2 = 0;
+int kac3 = 0;
+int kac4 = 0;
+int aan = 1;
