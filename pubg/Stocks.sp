@@ -200,38 +200,25 @@ stock void SaveConfiguration()
 	}
 	
 	File file = OpenFile(path, "r+");
-	Handle trie = null;
+	StringMap trie = null;
 	float P[3] = { 0.0, ... };
-	for (int i = 0; i < GetArraySize(ARRAY_Spawns); i++)
+	for (int i = 0; i < ARRAY_Spawns.Length; i++)
 	{
-		trie = GetArrayCell(ARRAY_Spawns, i);
-		GetTrieValue(trie, POSITION_X, P[0]);
-		GetTrieValue(trie, POSITION_Y, P[1]);
-		GetTrieValue(trie, POSITION_Z, P[2]);
+		trie = ARRAY_Spawns.Get(i);
+		trie.GetValue(POSITION_X, P[0]);
+		trie.GetValue(POSITION_Y, P[1]);
+		trie.GetValue(POSITION_Z, P[2]);
 		file.WriteLine("%f;%f;%f", P[0], P[1], P[2]);
 	}
 	delete file;
 }
 
 void SaveLocation(float Position[3]) {
-	char path[128], mapName[512];
-	GetCurrentMap(mapName, sizeof(mapName));
-	
-	BuildPath(Path_SM, path, sizeof(path), "configs/pubgalan/%s_oyuncu.cfg", mapName);
-	if (!FileExists(path)) {
-		File file = OpenFile(path, "w");
-		delete file;
-	}
-	File file = OpenFile(path, "r+");
-	file.WriteLine("%f;%f;%f", Position[0], Position[1], Position[2]);
-	delete file;
-	PrintToChatAll("%f;%f;%f", Position[0], Position[1], Position[2]);
 	StringMap trie = CreateTrie();
 	trie.SetValue(POSITION_X, Position[0]);
 	trie.SetValue(POSITION_Y, Position[1]);
 	trie.SetValue(POSITION_Z, Position[2]);
 	ARRAY_Spawns.Push(trie);
-	PrintToChatAll("pushed");
 }
 
 stock void LoadConfiguration(const char[] mapName)
@@ -264,12 +251,10 @@ stock void LoadConfiguration(const char[] mapName)
 	}
 	delete file;
 	
-	g_okacinci = GetArraySize(ARRAY_Spawns);
-	if (g_okacinci < 1)
+	if (ARRAY_Spawns.Length < 1)
 		PrintToServer("%s Oyuncu Spawn Konumu Bulunamadı !", PLUGIN_TAG);
 	else
-		PrintToServer("%s %i Tane Oyuncu Spawn Yüklendi !", PLUGIN_TAG, g_okacinci);
-	
+		PrintToServer("%s %i Tane Oyuncu Spawn Yüklendi !", PLUGIN_TAG, ARRAY_Spawns.Length);
 }
 
 void SpawnDrop(float pos[3])
@@ -287,8 +272,8 @@ void SpawnDrop(float pos[3])
 
 stock void RastgeleIsinla(int oyuncu)
 {
-	int spawnID = GetRandomInt(0, g_okacinci - 1);
-	StringMap positions = GetArrayCell(ARRAY_Spawns, spawnID);
+	int spawnID = GetRandomInt(0, ARRAY_Spawns.Length - 1);
+	StringMap positions = ARRAY_Spawns.Get(spawnID);
 	
 	float newSpawn[3];
 	positions.GetValue(POSITION_X, newSpawn[0]);
