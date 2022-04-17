@@ -3,6 +3,7 @@
 #include <sdkhooks>
 #include <basecomm>
 #include <overlays>
+#include <warden>
 
 #pragma semicolon 1
 #pragma newdecls required
@@ -20,9 +21,16 @@
 char dosyayolu[PLATFORM_MAX_PATH];
 
 char g_szWeapons[][] = {
-	"weapon_ak47", "weapon_m4a1_silencer", "weapon_m4a1", "weapon_famas", "weapon_mag7", "weapon_mp7", "weapon_ump45", "weapon_bizon", "weapon_mp5sd", "weapon_mac10", "weapon_mp9", 
-	"weapon_deagle", "weapon_fiveseven", "weapon_tec9", "weapon_revolver", "weapon_smokegrenade", 
-	"weapon_bumpmine", "weapon_hegrenade", "weapon_molotov", "weapon_taser", 
+    "weapon_ak47", "weapon_m4a1_silencer", "weapon_m4a1", "weapon_famas", "weapon_mag7", "weapon_p90", 
+    "weapon_deagle", "weapon_fiveseven", "weapon_ssg08", "weapon_taser", "weapon_breachcharge",
+};
+
+char g_OzelSilah[][] = {
+    "weapon_ak47", "weapon_awp", "weapon_m4a1", "weapon_m4a1_silencer", "weapon_awp", "weapon_aug", 
+};
+
+char g_OzelBombalar[][] = {
+    "weapon_hegrenade", "weapon_smokegrenade", "weapon_molotov", "weapon_tagrenade", "weapon_bumpmine", "weapon_breachcharge",
 };
 
 Handle ARRAY_Spawns;
@@ -32,10 +40,17 @@ int g_iTeammates[MAXPLAYERS + 1] = { 0 };
 int hazirlanma;
 int g_okacinci;
 int kacles[MAXPLAYERS];
+int dropmodel;
 
 bool g_bAktif = false;
+bool dropvar = false;
 
 ConVar g_hazirlanma = null;
+
+float can = 0.0;
+
+float dropyeri[3], silahlar[3];
+float TargetOrigin[3], Distance;
 
 public Plugin myinfo = 
 {
@@ -53,6 +68,8 @@ public void OnMapStart()
 	
 	g_iBeamSprite = PrecacheModel("materials/sprites/laserbeam.vmt");
 	g_iHaloSprite = PrecacheModel("materials/sprites/glow06.vmt");
+	
+	PrecacheModel("models/props_survival/cases/case_random_drop.mdl");
 	
 	AddFileToDownloadsTable("models/sourcepawn_com/silah.dx90.vtx");
 	AddFileToDownloadsTable("models/sourcepawn_com/silah.mdl");
@@ -80,6 +97,7 @@ public void OnPluginStart()
 	RegConsoleCmd("sm_pubgphiso", PubgBaslat);
 	RegConsoleCmd("sm_pubgphiso0", Pubg0);
 	RegConsoleCmd("sm_pubgtakimol", CMD_PubgTakim);
+	RegConsoleCmd("sm_dropgonder", DropOlustur);
 	
 	HookEvent("player_death", Event_PlayerDeath);
 	HookEvent("round_start", elbasladibitti);
@@ -102,7 +120,40 @@ public void OnMapEnd()
 	SaveConfiguration();
 }
 
-public Action elbasladibitti(Event event, const char[] name, bool db) { g_bAktif = false; hazirlanma = -1; SetCvar("mp_teammates_are_enemies", 0); SetCvar("mp_friendlyfire", 0); SilahTemizle(); foreachPlayer(player) { SetEntityMoveType(player, MOVETYPE_WALK); SDKUnhook(player, SDKHook_OnTakeDamage, OnTakeDamage); g_iTeammates[player] = 0; SetListenOverride(player, player, Listen_Yes); bool muteliymis[MAXPLAYERS + 1] = { false, ... }; if (BaseComm_IsClientMuted(player)) { muteliymis[player] = true; } SetListenOverride(player, muteliymis[player], Listen_No); } }
+public Action DropOlustur(int client, int args)
+{
+	if (warden_iswarden(client))
+	{
+		if (g_bAktif)
+		{
+			if (dropvar == false)
+			{
+				GetClientAimText(client, dropyeri);
+				dropyeri[2] += 500.0;
+				int cikti = 0;
+				while (TR_PointOutsideWorld(dropyeri)) {
+					cikti++;
+					dropyeri[2] -= 50.0;
+				}
+				silahlar[0] = dropyeri[0];
+				silahlar[1] = dropyeri[1];
+				silahlar[2] = cikti * 50 + dropyeri[2];
+				SpawnDrop(dropyeri);
+				dropvar = true;
+			}
+			else
+			{
+				PrintToChat(client, "[SM] \x04Şuan bir \x02drop \x04var!");
+			}
+		}
+	}
+	else
+	{
+		PrintToChat(client, "[SM] \x04Bu komutu kullanmak için \x0Bkomutçu \x04olmalısın!");
+	}
+}
+
+public Action elbasladibitti(Event event, const char[] name, bool db) { g_bAktif = false; dropvar = false; hazirlanma = -1; SetCvar("mp_teammates_are_enemies", 0); SetCvar("mp_friendlyfire", 0); SilahTemizle(); foreachPlayer(player) { SetEntityMoveType(player, MOVETYPE_WALK); kacles[player] = 0; SDKUnhook(player, SDKHook_OnTakeDamage, OnTakeDamage); g_iTeammates[player] = 0; SetListenOverride(player, player, Listen_Yes); bool muteliymis[MAXPLAYERS + 1] = { false, ... }; if (BaseComm_IsClientMuted(player)) { muteliymis[player] = true; } SetListenOverride(player, muteliymis[player], Listen_No); } }
 
 public void hazirdegisti(ConVar convar, const char[] oldValue, const char[] newValue) { hazirlanma = StringToInt(newValue); }
 
@@ -111,6 +162,7 @@ public Action Pubg0(int client, int args)
 	if (g_bAktif == true)
 	{
 		g_bAktif = false;
+		dropvar = false;
 		hazirlanma = -1;
 		SetCvar("mp_teammates_are_enemies", 0);
 		SetCvar("mp_friendlyfire", 0);
@@ -118,6 +170,7 @@ public Action Pubg0(int client, int args)
 		YeriTemizle();
 		LoopAllTerrorist(i)
 		{
+			kacles[i] = 0;
 			SetEntityMoveType(i, MOVETYPE_WALK);
 			ClearWeaponEx(i);
 			GivePlayerItem(i, "weapon_knife");
@@ -277,8 +330,8 @@ public Action CMD_PubgTakim(int client, int args)
 						takimm.AddItem(id, name);
 					}
 				}
-				takimm.Display(client, MENU_TIME_FOREVER);
 			}
+			takimm.Display(client, MENU_TIME_FOREVER);
 		}
 	}
 	else
@@ -301,7 +354,10 @@ public int TakimMenuCallBack(Menu menu, MenuAction action, int client, int posit
 			g_iTeammates[client] = 0;
 			g_iTeammates[g_iTeammates[client]] = 0;
 			
-			LoopAllTerrorist(i)
+			SDKUnhook(client, SDKHook_OnTakeDamage, OnTakeDamage);
+			SDKUnhook(g_iTeammates[client], SDKHook_OnTakeDamage, OnTakeDamage);
+
+			foreachPlayer(i)
 			{
 				SetListenOverride(i, client, Listen_Yes);
 				SetListenOverride(i, g_iTeammates[client], Listen_Yes);
@@ -388,27 +444,68 @@ public Action OnTakeDamage(int victim, int &attacker, int &inflictor, float &dam
 			damage = 0.0;
 			return Plugin_Changed;
 		}
+		
+		if (IsValidClient(attacker))
+		{
+			if (IsPlayerAlive(attacker))
+			{
+				if (IsValidEntity(victim))
+				{
+					char ModelPath[PLATFORM_MAX_PATH];
+					GetEntPropString(victim, Prop_Data, "m_ModelName", ModelPath, sizeof(ModelPath));
+					if (StrContains(ModelPath, "models/props_survival/cases/case_random_drop.mdl") != -1 || StrContains(ModelPath, "props_survival/cases/case_random_drop.mdl") != -1)
+					{
+						can += damage;
+						if (can > 331.0)
+						{
+							PrintToChatAll("[SM] \x10%N \x04Drop'u kırdı!", attacker);
+							silahlar[2] -= 500.0;
+							GetClientAbsOrigin(attacker, TargetOrigin);
+							Distance = GetVectorDistance(TargetOrigin, silahlar);
+							int ak47 = CreateEntityByName(g_OzelSilah[GetRandomInt(0, sizeof(g_OzelSilah) - 1)]);
+							int bombe = CreateEntityByName(g_OzelBombalar[GetRandomInt(0, sizeof(g_OzelBombalar) - 1)]);
+							int shot = CreateEntityByName("weapon_healthshot");
+							DispatchSpawn(shot);
+							DispatchSpawn(ak47);
+							DispatchSpawn(bombe);
+							TeleportEntity(ak47, silahlar, NULL_VECTOR, NULL_VECTOR);
+							TeleportEntity(bombe, silahlar, NULL_VECTOR, NULL_VECTOR);
+							TeleportEntity(shot, silahlar, NULL_VECTOR, NULL_VECTOR);
+							can = 0.0;
+							SDKUnhook(victim, SDKHook_OnTakeDamage, OnTakeDamage);
+							dropvar = false;
+							if (Distance < 500.0)
+							{
+								SetEntProp(attacker, Prop_Data, "m_ArmorValue", 100, 4);
+								SetEntProp(attacker, Prop_Send, "m_bHasHelmet", 1);
+							}
+						}
+					}
+				}
+			}
+		}
 	}
 	return Plugin_Continue;
 }
 
 public Action OnStartTouch(int entity, int client)
 {
-	if (g_bAktif == true)
-	{
-		if (IsValidClient(client) && IsPlayerAlive(client))
-		{
-			GivePlayerItem(client, g_szWeapons[GetRandomInt(0, sizeof(g_szWeapons) - 1)]);
-			Give_Effect(client, { 255, 0, 0, 130 } );
-			int m_iRotator = GetEntPropEnt(entity, Prop_Send, "m_hEffectEntity");
-			if (m_iRotator && IsValidEdict(m_iRotator))
-				AcceptEntityInput(m_iRotator, "Kill");
-			CreateTimer(0.0, Remove_Entity, entity);
-			SDKUnhook(entity, SDKHook_StartTouch, OnStartTouch);
-			
-			EmitSoundToClient(client, "sourcepawn_com/silah.mp3");
-		}
-	}
+    if (g_bAktif == true)
+    {
+        if (IsValidClient(client) && IsPlayerAlive(client))
+        {
+            GivePlayerItem(client, g_szWeapons[GetRandomInt(0, sizeof(g_szWeapons) - 1)]);
+            GivePlayerItem(client, g_OzelBombalar[GetRandomInt(0, sizeof(g_OzelBombalar) - 1)]);
+            Give_Effect(client, { 255, 0, 0, 130 } );
+            int m_iRotator = GetEntPropEnt(entity, Prop_Send, "m_hEffectEntity");
+            if (m_iRotator && IsValidEdict(m_iRotator))
+                AcceptEntityInput(m_iRotator, "Kill");
+            CreateTimer(0.0, Remove_Entity, entity);
+            SDKUnhook(entity, SDKHook_StartTouch, OnStartTouch);
+            
+            EmitSoundToClient(client, "sourcepawn_com/silah.mp3");
+        }
+    }
 }
 
 public Action PubgAyar(int client, int args)
@@ -473,7 +570,7 @@ public int AyarMenu(Menu menu, MenuAction action, int client, int item)
 		else if (item == 2)
 		{
 			float newSpawn[3];
-			GetClientAbsOrigin(client, newSpawn);
+			GetClientAimText(client, newSpawn);
 			g_okacinci++;
 			
 			Handle trie = CreateTrie();
@@ -535,9 +632,12 @@ public Action Event_PlayerDeath(Handle event, const char[] name, bool dontBroadc
 	{
 		int client = GetClientOfUserId(GetEventInt(event, "userid"));
 		int attacker = GetClientOfUserId(GetEventInt(event, "attacker"));
-		int takimarkadasi = g_iTeammates[attacker];
+		int takimarkadasi = 0;
 		kacles[attacker]++;
 		
+		if(g_iTeammates[attacker] != 0)
+			takimarkadasi = g_iTeammates[attacker];
+
 		if (IsValidClient(client))
 			g_iTeammates[client] = 0;
 		
@@ -853,4 +953,17 @@ stock void LoadConfiguration(const char[] mapName)
 	else
 		PrintToServer("%s %i Tane Oyuncu Spawn Yüklendi !", PLUGIN_TAG, g_okacinci);
 	
+}
+
+void SpawnDrop(float pos[3])
+{
+	dropmodel = CreateEntityByName("prop_physics_override");
+	SetEntityModel(dropmodel, "models/props_survival/cases/case_random_drop.mdl");
+	DispatchKeyValue(dropmodel, "targetname", "pubgdropcase");
+	SetEntProp(dropmodel, Prop_Data, "m_iHealth", 331);
+	SetEntProp(dropmodel, Prop_Data, "m_takedamage", 2);
+	ActivateEntity(dropmodel);
+	DispatchSpawn(dropmodel);
+	TeleportEntity(dropmodel, pos, NULL_VECTOR, NULL_VECTOR);
+	SDKHook(dropmodel, SDKHook_OnTakeDamage, OnTakeDamage);
 } 
