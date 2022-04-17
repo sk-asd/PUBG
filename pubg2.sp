@@ -11,10 +11,10 @@
 #define CT          3   /**< Counter-Terrorists. */
 #define LoopAllTerrorist(%1) for (int %1 = 1; %1 <= MaxClients; %1++) if (IsClientInGame(%1) && GetClientTeam(%1) == T)
 #define foreachPlayer(%1) for (int %1 = 1; %1 <= MaxClients; %1++) if (IsClientInGame(%1) && !IsFakeClient(%1))
+#define PLUGIN_TAG                "[Sourcepawn.com]"
 #define POSITION_X                "POSITION_X"
 #define POSITION_Y                "POSITION_Y"
 #define POSITION_Z                "POSITION_Z"
-#define PLUGIN_TAG                "[Sourcepawn.com]"
 
 char dosyayolu[PLATFORM_MAX_PATH];
 
@@ -46,6 +46,9 @@ public Plugin myinfo =
 
 public void OnMapStart()
 {
+	char mapName[45];
+	GetCurrentMap(mapName, sizeof(mapName));
+	
 	g_iBeamSprite = PrecacheModel("materials/sprites/laserbeam.vmt");
 	g_iHaloSprite = PrecacheModel("materials/sprites/glow06.vmt");
 	
@@ -61,15 +64,9 @@ public void OnMapStart()
 	PrecacheSound("sourcepawn_com/silah.mp3");
 	PrecacheSound("buttons/button14.wav");
 	
-	char mapName[45];
-	GetCurrentMap(mapName, sizeof(mapName));
 	LoadConfiguration(mapName);
 }
 
-public void OnMapEnd()
-{
-	SaveConfiguration();
-}
 
 public void OnPluginStart()
 {
@@ -94,7 +91,12 @@ public void OnPluginStart()
 	AutoExecConfig(true, "PUBG", "Sourcepawn.Com");
 }
 
-public Action elbasladibitti(Event event, const char[] name, bool db) { g_bAktif = false; hazirlanma = -1; SetCvar("mp_teammates_are_enemies", 0); SetCvar("mp_friendlyfire", 0); SilahTemizle(); foreachPlayer(player) { SetEntityMoveType(player, MOVETYPE_WALK); SDKUnhook(player, SDKHook_OnTakeDamage, OnTakeDamage); g_iTeammates[player] = 0; PrintToChat(player, "[SM] \x02%N \x04isimli yetkili pubg oyununu durdurdu!"); SetListenOverride(player, player, Listen_Yes); bool muteliymis[MAXPLAYERS + 1] = { false, ... }; if (BaseComm_IsClientMuted(player)) { muteliymis[player] = true; } SetListenOverride(player, muteliymis[player], Listen_No); } }
+public void OnMapEnd()
+{
+	SaveConfiguration();
+}
+
+public Action elbasladibitti(Event event, const char[] name, bool db) { g_bAktif = false; hazirlanma = -1; SetCvar("mp_teammates_are_enemies", 0); SetCvar("mp_friendlyfire", 0); SilahTemizle(); foreachPlayer(player) { SetEntityMoveType(player, MOVETYPE_WALK); SDKUnhook(player, SDKHook_OnTakeDamage, OnTakeDamage); g_iTeammates[player] = 0; SetListenOverride(player, player, Listen_Yes); bool muteliymis[MAXPLAYERS + 1] = { false, ... }; if (BaseComm_IsClientMuted(player)) { muteliymis[player] = true; } SetListenOverride(player, muteliymis[player], Listen_No); } }
 
 public void hazirdegisti(ConVar convar, const char[] oldValue, const char[] newValue) { hazirlanma = StringToInt(newValue); }
 
@@ -465,7 +467,8 @@ public int AyarMenu(Menu menu, MenuAction action, int client, int item)
 		else if (item == 2)
 		{
 			float newSpawn[3];
-			GetEntPropVector(client, Prop_Send, "m_vecOrigin", newSpawn);
+			GetClientAbsOrigin(client, newSpawn);
+			g_okacinci++;
 			
 			Handle trie = CreateTrie();
 			SetTrieValue(trie, POSITION_X, newSpawn[0]);
@@ -473,12 +476,9 @@ public int AyarMenu(Menu menu, MenuAction action, int client, int item)
 			SetTrieValue(trie, POSITION_Z, newSpawn[2]);
 			PushArrayCell(ARRAY_Spawns, trie);
 			
-			g_okacinci++;
-			
 			PrintCenterText(client, "Pubg oyuncu spawn noktası ayarı başarı ile yapıldı.");
 			
 			SaveConfiguration();
-			
 			PubgAyar(client, 0);
 		}
 		else if (item == 4)
@@ -758,14 +758,20 @@ stock void YeriTemizle()
 		AcceptEntityInput(iEnt, "Kill");
 }
 
-
 stock void SaveConfiguration()
 {
 	char path[75], mapName[45];
 	GetCurrentMap(mapName, sizeof(mapName));
 	
 	BuildPath(Path_SM, path, sizeof(path), "configs/pubgalan/%s_oyuncu.cfg", mapName);
-	Handle Dosya = OpenFile(path, "ab", false, "GAME");
+	if (!FileExists(path))
+	{
+		Handle file = OpenFile(path, "w");
+		CloseHandle(file);
+	}
+	
+	
+	Handle file = OpenFile(path, "w");
 	for (int i = 0; i < GetArraySize(ARRAY_Spawns); i++)
 	{
 		Handle trie = GetArrayCell(ARRAY_Spawns, i);
@@ -775,17 +781,17 @@ stock void SaveConfiguration()
 		GetTrieValue(trie, POSITION_X, Px);
 		GetTrieValue(trie, POSITION_Y, Py);
 		GetTrieValue(trie, POSITION_Z, Pz);
-		WriteFileLine(Dosya, "%f;%f;%f", Px, Py, Pz);
+		WriteFileLine(file, "%f;%f;%f", Px, Py, Pz);
 	}
 }
 
-stock bool LoadConfiguration(const char[] mapName)
+stock void LoadConfiguration(const char[] mapName)
 {
 	char path[75];
 	BuildPath(Path_SM, path, sizeof(path), "configs/pubgalan/%s_oyuncu.cfg", mapName);
 	
 	if (!DirExists("addons/sourcemod/configs/pubgalan"))
-		CreateDirectory("/addons/sourcemod/configs/pubgalan", 777);
+		CreateDirectory("/addons/sourcemod/configs/pubgalan", 0o777);
 	
 	Handle file = INVALID_HANDLE;
 	if (!FileExists(path))
@@ -794,40 +800,29 @@ stock bool LoadConfiguration(const char[] mapName)
 		file = OpenFile(path, "r");
 	
 	char line[200];
-	bool firstLine = true;
 	ClearArray(ARRAY_Spawns);
 	
 	while (!IsEndOfFile(file) && ReadFileLine(file, line, sizeof(line)))
 	{
-		if (firstLine)
-		{
-			firstLine = false;
-		}
-		else
-		{
-			char positions[3][15];
-			ExplodeString(line, ";", positions, sizeof positions, sizeof positions[]);
-			
-			Handle trie = CreateTrie();
-			SetTrieValue(trie, POSITION_X, StringToFloat(positions[0]));
-			SetTrieValue(trie, POSITION_Y, StringToFloat(positions[1]));
-			SetTrieValue(trie, POSITION_Z, StringToFloat(positions[2]));
-			
-			PushArrayCell(ARRAY_Spawns, trie);
-		}
+		
+		char positions[3][15];
+		ExplodeString(line, ";", positions, sizeof positions, sizeof positions[]);
+		
+		Handle trie = CreateTrie();
+		SetTrieValue(trie, POSITION_X, StringToFloat(positions[0]));
+		SetTrieValue(trie, POSITION_Y, StringToFloat(positions[1]));
+		SetTrieValue(trie, POSITION_Z, StringToFloat(positions[2]));
+		
+		PushArrayCell(ARRAY_Spawns, trie);
+		
 	}
 	CloseHandle(file);
-	
-	if (firstLine)
-	{
-		PrintToServer("%s Ayar Yapılmamış!", PLUGIN_TAG);
-		return false;
-	}
 	
 	g_okacinci = GetArraySize(ARRAY_Spawns);
 	
 	if (g_okacinci < 1)
-		PrintToServer("%s Hiçbir spawn noktası bulunamadı!", PLUGIN_TAG);
+		PrintToServer("%s Oyuncu Spawn Konumu Bulunamadı !", PLUGIN_TAG);
+	else
+		PrintToServer("%s %i Tane Oyuncu Spawn Yüklendi !", PLUGIN_TAG, g_okacinci);
 	
-	return true;
-}
+} 
