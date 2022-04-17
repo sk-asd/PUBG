@@ -75,8 +75,8 @@ public void OnMapStart()
 	AddFileToDownloadsTable("models/sourcepawn_com/silah.mdl");
 	AddFileToDownloadsTable("models/sourcepawn_com/silah.phy");
 	AddFileToDownloadsTable("models/sourcepawn_com/silah.vvd");
-	AddFileToDownloadsTable("materials/models/sourcepawn_com/pubg_silah.vmt");
-	AddFileToDownloadsTable("materials/models/sourcepawn_com/pubg_silah.vtf");
+	AddFileToDownloadsTable("materials/models/sourcepawn_com/pubg_weapon.vmt");
+	AddFileToDownloadsTable("materials/models/sourcepawn_com/pubg_weapon.vtf");
 	PrecacheModel("models/sourcepawn_com/PUBG/silah.mdl");
 	AddFileToDownloadsTable("materials/sourcepawn_com/br_winner.vtf");
 	AddFileToDownloadsTable("materials/sourcepawn_com/br_winner.vmt");
