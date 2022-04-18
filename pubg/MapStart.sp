@@ -16,8 +16,20 @@ public void OnMapStart()
 	AddFileToDownloadsTable("materials/models/sourcepawn_com/pubg_weapon.vmt");
 	AddFileToDownloadsTable("materials/models/sourcepawn_com/pubg_weapon.vtf");
 	PrecacheModel("models/sourcepawn_com/PUBG/silah.mdl");
+	
 	AddFileToDownloadsTable("materials/sourcepawn_com/br_winner.vtf");
 	AddFileToDownloadsTable("materials/sourcepawn_com/br_winner.vmt");
+	
+	AddFileToDownloadsTable("materials/models/enhancedrockets2/w_rocket_original.vmt");
+	AddFileToDownloadsTable("materials/models/enhancedrockets2/w_rocket_original.vtf");
+	AddFileToDownloadsTable("models/enhancedrockets2/w_rocket_original.dx80.vtx");
+	AddFileToDownloadsTable("models/enhancedrockets2/w_rocket_original.dx90.vtx");
+	AddFileToDownloadsTable("models/enhancedrockets2/w_rocket_original.mdl");
+	AddFileToDownloadsTable("models/enhancedrockets2/w_rocket_original.phy");
+	AddFileToDownloadsTable("models/enhancedrockets2/w_rocket_original.sw.vtx");
+	AddFileToDownloadsTable("models/enhancedrockets2/w_rocket_original.vvd");
+	PrecacheModel("models/enhancedrockets2/w_rocket_original.mdl", false);
+	PrecacheModel("models/props_vehicles/helicopter_rescue.mdl", false);
 	
 	AddFileToDownloadsTable("sound/sourcepawn_com/silah.mp3");
 	PrecacheSound("sourcepawn_com/silah.mp3");
