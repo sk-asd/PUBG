@@ -73,8 +73,6 @@ public Action HeliDusur(Handle timer, int Helikopter)
 			if (aan == 5)
 			{
 				CreateTimer(0.0, bombaiki, _, TIMER_FLAG_NO_MAPCHANGE | TIMER_REPEAT);
-				PrintToChatAll("31 2");
-				PrintToChatAll("%i aan", aan);
 			}
 			
 			aan++;
@@ -99,7 +97,6 @@ public Action bombaiki(Handle timer)
 	}
 	else if (kac2 <= 3)
 	{
-		PrintToChatAll(" \x0B31");
 		yeniaci[0] += 100.0;
 		int Bomba2 = CreateEntityByName("hegrenade_projectile", -1);
 		DispatchSpawn(Bomba2);
@@ -128,7 +125,6 @@ public Action bombauc(Handle timer)
 	}
 	else if (kac3 <= 2)
 	{
-		PrintToChatAll(" \x0231");
 		anan2[1] -= 100.0;
 		int Bomba2 = CreateEntityByName("hegrenade_projectile", -1);
 		DispatchSpawn(Bomba2);
@@ -136,13 +132,10 @@ public Action bombauc(Handle timer)
 		SetEntityModel(Bomba2, "models/enhancedrockets2/w_rocket_original.mdl");
 		SetEntityGravity(Bomba2, 1.0);
 		TeleportEntity(Bomba2, anan2, aci, NULL_VECTOR);
-		PrintToChatAll("%i", kac3);
 		
 		if (kac3 == 2)
 		{
-			
 			CreateTimer(0.0, bombadort, _, TIMER_FLAG_NO_MAPCHANGE | TIMER_REPEAT);
-			PrintToChatAll("kac3 oldu");
 		}
 		return Plugin_Continue;
 	}
@@ -173,7 +166,6 @@ public Action bombadort(Handle timer)
 			SetEntityModel(Bomba, "models/enhancedrockets2/w_rocket_original.mdl");
 			SetEntityGravity(Bomba, 1.0);
 			TeleportEntity(Bomba, anan2, aci, NULL_VECTOR);
-			PrintToChatAll("%i", kac4);
 		}
 		else if (kac4 == 2)
 		{
@@ -184,7 +176,6 @@ public Action bombadort(Handle timer)
 			SetEntityModel(Bomba2, "models/enhancedrockets2/w_rocket_original.mdl");
 			SetEntityGravity(Bomba2, 1.0);
 			TeleportEntity(Bomba2, anan2, aci, NULL_VECTOR);
-			PrintToChatAll("%i", kac4);
 		}
 		return Plugin_Continue;
 	}
