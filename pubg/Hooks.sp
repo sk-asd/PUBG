@@ -58,12 +58,15 @@ public Action Event_PlayerDeath(Event event, const char[] name, bool dontBroadca
 			ServerCommand("sm_pubgphiso0");
 			char format[512], attname[32];
 			GetClientName(attacker, attname, sizeof(attname));
-			Format(format, sizeof(format), "Oyun bitti. %i leş ile %s kazandı, tebrikler!", kacles[attacker], attname);
-			ShowStatusMessage(-1, format, 5);
-			foreachPlayer(i)
+			if (attacker != client)
 			{
-				ShowOverlay(i, "sourcepawn_com/br_winner", 5.0);
-				EmitSoundToClient(i, "sourcepawn_com/winnersound.mp3");
+				Format(format, sizeof(format), "Oyun bitti. %i leş ile %s kazandı, tebrikler!", kacles[attacker], attname);
+				ShowStatusMessage(-1, format, 5);
+				foreachPlayer(i)
+				{
+					ShowOverlay(i, "sourcepawn_com/br_winner", 5.0);
+					EmitSoundToClient(i, "sourcepawn_com/winnersound.mp3");
+				}
 			}
 			//overlay + bitiş sesi
 		}
@@ -77,16 +80,19 @@ public Action Event_PlayerDeath(Event event, const char[] name, bool dontBroadca
 					{
 						PrintToChatAll("[SM] \x01PUBG Oyunu bitti! \x10%N \x01ile \x10%N \x01oyunu kazandı!", attacker, takimarkadasi);
 						ServerCommand("sm_pubgphiso0");
-						char format[512], attname[32], tname[32];
-						GetClientName(attacker, attname, sizeof(attname));
-						GetClientName(takimarkadasi, tname, sizeof(tname));
-						int kaclesaldilar = kacles[attacker] + kacles[takimarkadasi];
-						Format(format, sizeof(format), "Oyun bitti. toplam %i leş ile %s ve %s kazandı, tebrikler!", kaclesaldilar, attname, tname);
-						ShowStatusMessage(-1, format, 5);
-						foreachPlayer(i)
+						if (attacker != client)
 						{
-							ShowOverlay(i, "sourcepawn_com/br_winner", 5.0);
-							EmitSoundToClient(i, "sourcepawn_com/winnersound.mp3");
+							char format[512], attname[32], tname[32];
+							GetClientName(attacker, attname, sizeof(attname));
+							GetClientName(takimarkadasi, tname, sizeof(tname));
+							int kaclesaldilar = kacles[attacker] + kacles[takimarkadasi];
+							Format(format, sizeof(format), "Oyun bitti. toplam %i leş ile %s ve %s kazandı, tebrikler!", kaclesaldilar, attname, tname);
+							ShowStatusMessage(-1, format, 5);
+							foreachPlayer(i)
+							{
+								ShowOverlay(i, "sourcepawn_com/br_winner", 5.0);
+								EmitSoundToClient(i, "sourcepawn_com/winnersound.mp3");
+							}
 						}
 					}
 				}
