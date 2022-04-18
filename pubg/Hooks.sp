@@ -20,13 +20,16 @@ public Action OnStartTouch(int entity, int client)
 		if (StrContains(ModelPath, "models/enhancedrockets2/w_rocket_original.mdl") != -1 || StrContains(ModelPath, "enhancedrockets2/w_rocket_original.mdl") != -1)
 		{
 			GetEntPropVector(entity, Prop_Send, "m_vecOrigin", ah);
-			CS_CreateExplosion(100, 700, ah);
-			ikincisira[0] = ah[0];
-			ikincisira[1] = ah[1];
-			ikincisira[2] = ah[2];
-			AcceptEntityInput(entity, "Kill");
-			CreateTimer(0.0, Remove_Entity, entity);
-			CreateTimer(0.1, HelKontrol, _, TIMER_FLAG_NO_MAPCHANGE);
+			if (ah[2] <= g_fexpcoordinate[2])
+			{
+				AcceptEntityInput(entity, "Kill");
+				CreateTimer(0.0, Remove_Entity, entity);
+				CreateTimer(0.1, HelKontrol, _, TIMER_FLAG_NO_MAPCHANGE);
+				CS_CreateExplosion(100, 700, ah);
+				ikincisira[0] = ah[0];
+				ikincisira[1] = ah[1];
+				ikincisira[2] = ah[2];
+			} //-200bomba 20 roket
 		}
 	}
 }
