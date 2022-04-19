@@ -229,6 +229,7 @@ public Action HelKontrol(Handle timer)
 			}
 		}
 	}
+	return Plugin_Continue;
 }
 
 void CS_CreateExplosion(int damage, int radius, float pos[3])
