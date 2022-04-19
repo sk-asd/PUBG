@@ -26,5 +26,6 @@ public Plugin myinfo = { name = "PUBG Oyunu", author = "phiso, hibna", descripti
 /____  >____/|____/ |__|    \___  >___  >   __(____  /\/\_/|___|  / /\ \___  >____/|__|_|  /
      \/                         \/    \/|__|       \/           \/  \/     \/            \/ 
 
-*/
 
+
+*/
