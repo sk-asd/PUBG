@@ -41,12 +41,12 @@ ConVar g_cOnlyWarden = null;
 float can = 0.0, dropyeri[3] = { 0.0, ... }, silahlar[3] = { 0.0, ... }, TargetOrigin[3] = { 0.0, ... }; 
 
 float g_fexpcoordinate[3];
-float koordinat[3] = 0.0;
+float koordinat[3] = { 0.0, 0.0, 0.0 };
 float yeniaci[3];
 float aci[3] = 90.0;
-float ikincisira[3] = 0.0;
-float anan2[3] = 0.0;
-float ah[3] = 0.0;
+float ikincisira[3] ={ 0.0, 0.0, 0.0 };
+float anan2[3] = { 0.0, 0.0, 0.0 };
+float ah[3] = { 0.0, 0.0, 0.0 };
 
 int g_iPathLaserModelIndex;
 int kac = 0;
