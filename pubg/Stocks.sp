@@ -23,12 +23,12 @@ stock void StringToLowerCase(char[] szInput)
 }
 public void GetClientAimText(int client, float fPos[3])
 {
-	float pos[3] = 0.0;
-	float ang[3] = 0.0;
+	float pos[3] = { 0.0, 0.0, 0.0 }
+	float ang[3] = { 0.0, 0.0, 0.0 }
 	GetClientEyePosition(client, pos);
 	GetClientEyeAngles(client, ang);
 	Handle tr = TR_TraceRayFilterEx(pos, ang, MASK_SHOT, RayType_Infinite, TraceEntityFilterPlayer, client);
-	float fVec[3] = 0.0;
+	float fVec[3] = { 0.0, 0.0, 0.0 }
 	TR_GetEndPosition(fPos, tr);
 	TR_GetPlaneNormal(tr, fVec);
 	TE_SetupBeamRingPoint(fPos, 1.0, 75.0, g_iBeamSprite, g_iHaloSprite, 0, 10, 0.5, 10.0, 0.0, { 255, 147, 0, 255 }, 5, 0);
@@ -158,7 +158,7 @@ stock void SilahTemizle()
 		if (IsValidEdict(i) && IsValidEntity(i))
 		{
 			GetEntPropString(i, Prop_Data, "m_ModelName", ModelPath, sizeof(ModelPath));
-			if (StrContains(ModelPath, "sourcepawn_com/silah") != -1 || StrContains(ModelPath, "models/props_vehicles/helicopter_rescue.mdl") != -1 || StrContains(ModelPath, "props_vehicles/helicopter_rescue.mdl") != -1)
+			if (StrContains(ModelPath, "sourcepawn_com/silah") != -1 || StrContains(ModelPath, "models/props_vehicles/helicopter_rescue.mdl") != -1 || StrContains(ModelPath, "props_vehicles/helicopter_rescue.mdl") != -1 || StrContains(ModelPath, "models/enhancedrockets2/w_rocket_original.mdl") != -1 || StrContains(ModelPath, "enhancedrockets2/w_rocket_original.mdl") != -1 )
 			{
 				RemoveEntity(i);
 			}
@@ -281,4 +281,72 @@ stock void RastgeleIsinla(int oyuncu)
 	positions.GetValue(POSITION_Z, newSpawn[2]);
 	
 	TeleportEntity(oyuncu, newSpawn, NULL_VECTOR, NULL_VECTOR);
+}
+
+public Action Pubg0(int client, int args)
+{
+	if (!g_bAktif)
+	{
+		PrintToChat(client, "[SM] \x04Şu anda zaten bir \x02pubg \x04oyunu oynanmıyor!");
+		return Plugin_Handled;
+	}
+	g_bAktif = false;
+	dropvar = false;
+	hazirlanma = -1;
+	SetCvar("mp_teammates_are_enemies", 0);
+	SetCvar("mp_friendlyfire", 0);
+	SilahTemizle();
+	YeriTemizle();
+	LoopAllTerrorist(i)
+	{
+		kacles[i] = 0;
+		SetEntityMoveType(i, MOVETYPE_WALK);
+		ClearWeaponEx(i);
+		GivePlayerItem(i, "weapon_knife");
+	}
+	foreachPlayer(player)
+	{
+		SDKUnhook(player, SDKHook_OnTakeDamage, OnTakeDamage);
+		g_iTeammates[player] = 0;
+		PrintToChat(player, "[SM] \x02%N \x04isimli yetkili pubg oyununu durdurdu!");
+		SetListenOverride(player, player, Listen_Yes);
+		bool muteliymis[MAXPLAYERS + 1] = { false, ... };
+		if (BaseComm_IsClientMuted(player))
+			muteliymis[player] = true;
+		SetListenOverride(player, muteliymis[player], Listen_No);
+	}
+	return Plugin_Handled;
+}
+
+public Action DropOlustur(int client, int args)
+{
+	if (!warden_iswarden(client))
+	{
+		PrintToChat(client, "[SM] \x04Bu komutu kullanmak için \x0Bkomutçu \x04olmalısın!");
+		return Plugin_Handled;
+	}
+	if (!g_bAktif)
+	{
+		PrintToChat(client, "[SM] \x04Şuan \x02pubg \x04oynanmıyor!");
+		return Plugin_Handled;
+	}
+	if (dropvar)
+	{
+		PrintToChat(client, "[SM] \x04Şuan bir \x02drop \x04var!");
+		return Plugin_Handled;
+	}
+	
+	GetClientAimText(client, dropyeri);
+	dropyeri[2] += 500.0;
+	int cikti = 0;
+	while (TR_PointOutsideWorld(dropyeri)) {
+		cikti++;
+		dropyeri[2] -= 50.0;
+	}
+	silahlar[0] = dropyeri[0];
+	silahlar[1] = dropyeri[1];
+	silahlar[2] = cikti * 50 + dropyeri[2];
+	SpawnDrop(dropyeri);
+	dropvar = true;
+	return Plugin_Handled;
 }
