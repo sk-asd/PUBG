@@ -20,18 +20,17 @@ public Action OnStartTouch(int entity, int client)
 		if (StrContains(ModelPath, "models/enhancedrockets2/w_rocket_original.mdl") != -1 || StrContains(ModelPath, "enhancedrockets2/w_rocket_original.mdl") != -1)
 		{
 			GetEntPropVector(entity, Prop_Send, "m_vecOrigin", ah);
-			if (ah[2] <= g_fexpcoordinate[2])
-			{
-				AcceptEntityInput(entity, "Kill");
-				CreateTimer(0.0, Remove_Entity, entity);
-				CreateTimer(0.1, HelKontrol, _, TIMER_FLAG_NO_MAPCHANGE);
-				CS_CreateExplosion(100, 700, ah);
-				ikincisira[0] = ah[0];
-				ikincisira[1] = ah[1];
-				ikincisira[2] = ah[2];
-			} //-200bomba 20 roket
+			AcceptEntityInput(entity, "Kill");
+			CreateTimer(0.0, Remove_Entity, entity);
+			CreateTimer(0.1, HelKontrol, _, TIMER_FLAG_NO_MAPCHANGE);
+			CS_CreateExplosion(100, 700, ah);
+			ikincisira[0] = ah[0];
+			ikincisira[1] = ah[1];
+			ikincisira[2] = ah[2]; 
+			//-200bomba 20 roket
 		}
 	}
+	return Plugin_Handled;
 }
 
 public Action Event_PlayerDeath(Event event, const char[] name, bool dontBroadcast)
@@ -58,7 +57,6 @@ public Action Event_PlayerDeath(Event event, const char[] name, bool dontBroadca
 		if (yasayant == 1)
 		{
 			PrintToChatAll("[SM] \x01PUBG Oyunu bitti! \x10%N \x01oyunu kazandı!", attacker);
-			ServerCommand("sm_pubgphiso0");
 			char format[512], attname[32];
 			GetClientName(attacker, attname, sizeof(attname));
 			if (attacker != client)
@@ -71,6 +69,7 @@ public Action Event_PlayerDeath(Event event, const char[] name, bool dontBroadca
 					EmitSoundToClient(i, "sourcepawn_com/winnersound.mp3");
 				}
 			}
+			ServerCommand("sm_pubgphiso0");
 			//overlay + bitiş sesi
 		}
 		else if (yasayant == 2)
@@ -82,7 +81,6 @@ public Action Event_PlayerDeath(Event event, const char[] name, bool dontBroadca
 					if (g_iTeammates[attacker] == takimarkadasi)
 					{
 						PrintToChatAll("[SM] \x01PUBG Oyunu bitti! \x10%N \x01ile \x10%N \x01oyunu kazandı!", attacker, takimarkadasi);
-						ServerCommand("sm_pubgphiso0");
 						if (attacker != client)
 						{
 							char format[512], attname[32], tname[32];
@@ -96,12 +94,14 @@ public Action Event_PlayerDeath(Event event, const char[] name, bool dontBroadca
 								ShowOverlay(i, "sourcepawn_com/br_winner", 5.0);
 								EmitSoundToClient(i, "sourcepawn_com/winnersound.mp3");
 							}
+							ServerCommand("sm_pubgphiso0");
 						}
 					}
 				}
 			}
 		}
 	}
+	return Plugin_Handled;
 }
 
 public Action OnTakeDamage(int victim, int &attacker, int &inflictor, float &damage, int &damagetype, int &weapon, float damageForce[3], float damagePosition[3])
@@ -175,6 +175,7 @@ public Action elbasladibitti(Event event, const char[] name, bool db)
 		}
 		SetListenOverride(player, muteliymis[player], Listen_No);
 	}
+	return Plugin_Handled;
 }
 
 public void hazirdegisti(ConVar convar, const char[] oldValue, const char[] newValue) { hazirlanma = StringToInt(newValue); }
