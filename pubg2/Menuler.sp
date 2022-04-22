@@ -2,33 +2,40 @@ public Action PubgBaslat(int client, int args)
 {
 	if (g_bAktif == false)
 	{
-		Panel wpanel = new Panel();
-		char Mesaj[256];
-		char sure[32];
-		g_hazirlanma.GetString(sure, sizeof(sure));
-		int suremenu = StringToInt(sure);
-		Format(Mesaj, sizeof(Mesaj), "!- PUBG Oyunu Başlatıldı -!\n%d saniye sonra başlatılacak\n ", suremenu);
-		wpanel.SetTitle(Mesaj, false);
-		wpanel.DrawText("▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬");
-		wpanel.DrawText("!pubgtakimol yazarak bir takım oluşturun.");
-		wpanel.DrawText("Takım olanlar kendi aralarında sesli olarak konuşabilir.");
-		wpanel.DrawText("Seslerini sadece takım arkadaşları duyar.");
-		wpanel.DrawText("Oyun başladığında loot'lanarak düşmanları öldürün.\n ");
-		wpanel.CurrentKey = 4;
-		wpanel.DrawItem("Kapat.");
-		hazirlanma = suremenu;
-		g_bAktif = true;
-		CreateTimer(1.0, countdown, _, TIMER_FLAG_NO_MAPCHANGE | TIMER_REPEAT);
-		PrintToChatAll("[SM] \x02%N \x04Pubg oyununu başlattı!", client);
-		YeriTemizle();
-		LoopAllTerrorist(i)
+		if (ARRAY_Spawns.Length >= 1)
 		{
-			ClearWeaponEx(i);
-			SetEntityMoveType(i, MOVETYPE_NONE);
-			RastgeleIsinla(i);
-			wpanel.Send(i, callback, suremenu);
+			Panel wpanel = new Panel();
+			char Mesaj[256];
+			char sure[32];
+			g_hazirlanma.GetString(sure, sizeof(sure));
+			int suremenu = StringToInt(sure);
+			Format(Mesaj, sizeof(Mesaj), "!- PUBG Oyunu Başlatıldı -!\n%d saniye sonra başlatılacak\n ", suremenu);
+			wpanel.SetTitle(Mesaj, false);
+			wpanel.DrawText("▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬");
+			wpanel.DrawText("!pubgtakimol yazarak bir takım oluşturun.");
+			wpanel.DrawText("Takım olanlar kendi aralarında sesli olarak konuşabilir.");
+			wpanel.DrawText("Seslerini sadece takım arkadaşları duyar.");
+			wpanel.DrawText("Oyun başladığında loot'lanarak düşmanları öldürün.\n ");
+			wpanel.CurrentKey = 4;
+			wpanel.DrawItem("Kapat.");
+			hazirlanma = suremenu;
+			g_bAktif = true;
+			CreateTimer(1.0, countdown, _, TIMER_FLAG_NO_MAPCHANGE | TIMER_REPEAT);
+			PrintToChatAll("[SM] \x02%N \x04Pubg oyununu başlattı!", client);
+			YeriTemizle();
+			LoopAllTerrorist(i)
+			{
+				ClearWeaponEx(i);
+				SetEntityMoveType(i, MOVETYPE_NONE);
+				RastgeleIsinla(i);
+				wpanel.Send(i, callback, suremenu);
+			}
+			delete wpanel;
 		}
-		delete wpanel;
+		else
+		{
+			PrintToChat(client, "[SM] \x02Oyuncu konumu ayarlanmamış! \x10(!pubgayarla)");
+		}
 	}
 	else
 	{
