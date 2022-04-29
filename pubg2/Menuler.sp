@@ -22,6 +22,9 @@ public Action PubgBaslat(int client, int args)
 			g_bAktif = true;
 			CreateTimer(1.0, countdown, _, TIMER_FLAG_NO_MAPCHANGE | TIMER_REPEAT);
 			PrintToChatAll("[SM] \x02%N \x04Pubg oyununu başlattı!", client);
+			char sBuffer[512];
+			Format(sBuffer, sizeof(sBuffer), "<font color='#00FF00' class='fontSize-xl'><b>%i<b></font> <font color='#FF0000' class='fontSize-xl'><b>saniye sonra oyun başlayacak!<b></font> <font color='#F0E68C' class='fontSize-xl'><b>!pubgtakimol<b></font> \n \n <img src='https://imgyukle.com/f/2022/04/30/Rhfpsh.jpg'", suremenu);
+			WinPanelMessageEx(-1, sBuffer);
 			YeriTemizle();
 			LoopAllTerrorist(i)
 			{
@@ -53,7 +56,7 @@ public Action countdown(Handle timer)
 		return Plugin_Stop;
 	}
 	
-	if (hazirlanma == 0)
+	if (hazirlanma == 1)
 	{
 		KeyValues kv = CreateKeyValues("pubgsilah");
 		char map[64];
@@ -91,19 +94,19 @@ public Action countdown(Handle timer)
 				EquipPlayerWeapon(i, taser);
 			}
 		}
-		red = g_credzone.IntValue;
-		CreateTimer(1.0, RedZone, _, TIMER_REPEAT | TIMER_FLAG_NO_MAPCHANGE);
+		WinPanelDelete();
 		return Plugin_Handled;
 	}
 	else
 	{
-		if (hazirlanma >= 1)
+		if (hazirlanma > 1)
 		{
 			hazirlanma--;
-			char sBuffer[512];
-			Format(sBuffer, sizeof(sBuffer), "<font color='#00FF00'>%d</font> <font color='#FF0000'>saniye sonra oyun başlayacak!</font> <font color='#F0E68C'>!pubgtakimol</font>", hazirlanma);
-			ShowStatusMessage(-1, sBuffer, 2);
-			PrintHintTextToAll("<font size='20' color='#00FF00'>%d</font> <font size='20' color='#FF0000'>saniye sonra oyun başlayacak</font> <font size='20' color='#F0E68C'>!pubgtakimol</font>", hazirlanma);
+			if (hazirlanma <= 10)
+			{
+				WinPanelDelete();
+				PrintToChatAll("[SM] \x04%i \x02saniye sonra oyun başlayacak!", hazirlanma);
+			}
 			return Plugin_Continue;
 		}
 	}
