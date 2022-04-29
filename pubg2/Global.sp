@@ -37,7 +37,6 @@ dropvar = false;
 
 ConVar g_hazirlanma = null;
 ConVar g_cOnlyWarden = null;
-ConVar g_credzone = null;
 
 float can = 0.0, dropyeri[3] = { 0.0, ... }, silahlar[3] = { 0.0, ... }, TargetOrigin[3] = { 0.0, ... }; 
 
@@ -48,11 +47,7 @@ float aci[3] = 90.0;
 float ikincisira[3] ={ 0.0, 0.0, 0.0 };
 float anan2[3] = { 0.0, 0.0, 0.0 };
 float ah[3] = { 0.0, 0.0, 0.0 };
-float origin1a[3] = 0.0;
-float koordinata[3] = { 0.0, 0.0, 0.0 };
-float yeniacia[3];
 float ikincisirax[3] = { 0.0, 0.0, 0.0 };
-float anan2a[3] = { 0.0, 0.0, 0.0 };
 float aha[3] = { 0.0, 0.0, 0.0 };
 
 int g_iPathLaserModelIndex;
@@ -61,9 +56,3 @@ int kac2 = 0;
 int kac3 = 0;
 int kac4 = 0;
 int aan = 1;
-int randomkisi;
-int kac22 = 0;
-int kac33 = 0;
-int kac44 = 0;
-int aann = 1;
-int red = 0;
