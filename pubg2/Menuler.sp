@@ -21,10 +21,10 @@ public Action PubgBaslat(int client, int args)
 			hazirlanma = suremenu;
 			g_bAktif = true;
 			CreateTimer(1.0, countdown, _, TIMER_FLAG_NO_MAPCHANGE | TIMER_REPEAT);
-			PrintToChatAll("[SM] \x02%N \x04Pubg oyununu başlattı!", client);
 			char sBuffer[512];
-			Format(sBuffer, sizeof(sBuffer), "<font color='#00FF00' class='fontSize-xl'><b>%i<b></font> <font color='#FF0000' class='fontSize-xl'><b>saniye sonra oyun başlayacak!<b></font> <font color='#F0E68C' class='fontSize-xl'><b>!pubgtakimol<b></font> \n \n <img src='https://imgyukle.com/f/2022/04/30/Rhfpsh.jpg'", suremenu);
+			Format(sBuffer, sizeof(sBuffer), "<font color='#00FF00' class='fontSize-xl'><b>%i<b></font> <font color='#FF0000' class='fontSize-xl'><b>saniye sonra oyun başlayacak!<b></font> <font color='#F0E68C' class='fontSize-xl'><b>!pubgtakimol<b></font> \n \n <img src='https://imgyukle.com/f/2022/04/30/Rhfpsh.jpg'", hazirlanma);
 			WinPanelMessageEx(-1, sBuffer);
+			PrintToChatAll("[SM] \x02%N \x04Pubg oyununu başlattı!", client);
 			YeriTemizle();
 			LoopAllTerrorist(i)
 			{
@@ -104,7 +104,6 @@ public Action countdown(Handle timer)
 			hazirlanma--;
 			if (hazirlanma <= 10)
 			{
-				WinPanelDelete();
 				PrintToChatAll("[SM] \x04%i \x02saniye sonra oyun başlayacak!", hazirlanma);
 			}
 			return Plugin_Continue;
@@ -120,7 +119,7 @@ public Action CMD_PubgTakim(int client, int args)
 		if (GetClientTeam(client) == T)
 		{
 			Menu takimm = new Menu(TakimMenuCallBack);
-			takimm.SetTitle("[PUBG] Takım Menüsü");
+			takimm.SetTitle("[PUBG] Takım Menüsü\n ");
 			if (g_iTeammates[client] != 0)
 				takimm.AddItem("ayrıl", "Takımdan Ayrıl");
 			else
