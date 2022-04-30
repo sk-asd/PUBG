@@ -297,6 +297,7 @@ public Action Pubg0(int client, int args)
 	SetCvar("mp_friendlyfire", 0);
 	SilahTemizle();
 	YeriTemizle();
+	WinPanelDelete();
 	LoopAllTerrorist(i)
 	{
 		kacles[i] = 0;
