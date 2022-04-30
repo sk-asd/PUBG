@@ -4,36 +4,49 @@ public Action PubgBaslat(int client, int args)
 	{
 		if (ARRAY_Spawns.Length >= 1)
 		{
-			Panel wpanel = new Panel();
-			char Mesaj[256];
-			char sure[32];
-			g_hazirlanma.GetString(sure, sizeof(sure));
-			int suremenu = StringToInt(sure);
-			Format(Mesaj, sizeof(Mesaj), "!- PUBG Oyunu Başlatıldı -!\n%d saniye sonra başlatılacak\n ", suremenu);
-			wpanel.SetTitle(Mesaj, false);
-			wpanel.DrawText("▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬");
-			wpanel.DrawText("!pubgtakimol yazarak bir takım oluşturun.");
-			wpanel.DrawText("Takım olanlar kendi aralarında sesli olarak konuşabilir.");
-			wpanel.DrawText("Seslerini sadece takım arkadaşları duyar.");
-			wpanel.DrawText("Oyun başladığında loot'lanarak düşmanları öldürün.\n ");
-			wpanel.CurrentKey = 4;
-			wpanel.DrawItem("Kapat.");
-			hazirlanma = suremenu;
-			g_bAktif = true;
-			CreateTimer(1.0, countdown, _, TIMER_FLAG_NO_MAPCHANGE | TIMER_REPEAT);
-			char sBuffer[512];
-			Format(sBuffer, sizeof(sBuffer), "<font color='#00FF00' class='fontSize-xl'><b>%i<b></font> <font color='#FF0000' class='fontSize-xl'><b>saniye sonra oyun başlayacak!<b></font> <font color='#F0E68C' class='fontSize-xl'><b>!pubgtakimol<b></font> \n \n <img src='https://imgyukle.com/f/2022/04/30/Rhfpsh.jpg'", hazirlanma);
-			WinPanelMessageEx(-1, sBuffer);
-			PrintToChatAll("[SM] \x02%N \x04Pubg oyununu başlattı!", client);
-			YeriTemizle();
-			LoopAllTerrorist(i)
+			KeyValues kv = CreateKeyValues("pubgsilah");
+			char map[64];
+			GetCurrentMap(map, sizeof(map));
+			StringToLowerCase(map);
+			BuildPath(Path_SM, dosyayolu, sizeof(dosyayolu), "configs/pubgalan/%s_silah.txt", map);
+			FileToKeyValues(kv, dosyayolu);
+			if (kv.GotoFirstSubKey())
 			{
-				ClearWeaponEx(i);
-				SetEntityMoveType(i, MOVETYPE_NONE);
-				RastgeleIsinla(i);
-				wpanel.Send(i, callback, suremenu);
+				Panel wpanel = new Panel();
+				char Mesaj[256];
+				char sure[32];
+				g_hazirlanma.GetString(sure, sizeof(sure));
+				int suremenu = StringToInt(sure);
+				Format(Mesaj, sizeof(Mesaj), "!- PUBG Oyunu Başlatıldı -!\n%d saniye sonra başlatılacak\n ", suremenu);
+				wpanel.SetTitle(Mesaj, false);
+				wpanel.DrawText("▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬");
+				wpanel.DrawText("!pubgtakimol yazarak bir takım oluşturun.");
+				wpanel.DrawText("Takım olanlar kendi aralarında sesli olarak konuşabilir.");
+				wpanel.DrawText("Seslerini sadece takım arkadaşları duyar.");
+				wpanel.DrawText("Oyun başladığında loot'lanarak düşmanları öldürün.\n ");
+				wpanel.CurrentKey = 4;
+				wpanel.DrawItem("Kapat.");
+				hazirlanma = suremenu;
+				g_bAktif = true;
+				CreateTimer(1.0, countdown, _, TIMER_FLAG_NO_MAPCHANGE | TIMER_REPEAT);
+				char sBuffer[512];
+				Format(sBuffer, sizeof(sBuffer), "<font color='#00FF00' class='fontSize-xl'><b>%i<b></font> <font color='#FF0000' class='fontSize-xl'><b>saniye sonra oyun başlayacak!<b></font> <font color='#F0E68C' class='fontSize-xl'><b>!pubgtakimol<b></font> \n \n <img src='https://imgyukle.com/f/2022/04/30/Rhfpsh.jpg'", hazirlanma);
+				WinPanelMessageEx(-1, sBuffer);
+				PrintToChatAll("[SM] \x02%N \x04Pubg oyununu başlattı!", client);
+				YeriTemizle();
+				LoopAllTerrorist(i)
+				{
+					ClearWeaponEx(i);
+					SetEntityMoveType(i, MOVETYPE_NONE);
+					RastgeleIsinla(i);
+					wpanel.Send(i, callback, suremenu);
+				}
+				delete wpanel;
 			}
-			delete wpanel;
+			else
+			{
+				PrintToChat(client, "[SM] \x02Silah konumları ayarlanmamış! \x10(!pubgayarla)");
+			}
 		}
 		else
 		{
