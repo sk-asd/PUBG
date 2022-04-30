@@ -136,7 +136,7 @@ public Action OnTakeDamage(int victim, int &attacker, int &inflictor, float &dam
 	{
 		if (g_iTeammates[attacker] == victim)
 		{
-			damage = 0.0;
+			damage = damage / 2.0; //32 / 2 == 15
 			return Plugin_Changed;
 		}
 		

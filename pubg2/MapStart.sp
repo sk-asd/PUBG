@@ -35,6 +35,8 @@ public void OnMapStart()
 	PrecacheSound("sourcepawn_com/silah.mp3");
 	AddFileToDownloadsTable("sound/sourcepawn_com/winnersound.mp3");
 	PrecacheSound("sourcepawn_com/winnersound.mp3");
+	AddFileToDownloadsTable("sound/sourcepawn_com/isinlanma.mp3");
+	PrecacheSound("sourcepawn_com/isinlanma.mp3");
 	PrecacheSound("buttons/button14.wav");
 	
 	LoadConfiguration(mapName);

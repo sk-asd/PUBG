@@ -228,6 +228,8 @@ public int OnayMenuCallBack(Menu menu, MenuAction action, int client, int itemNu
 			GetClientAbsOrigin(g_iTeammates[client], vecPosition);
 			PrintToChatAll("[SM] \x10%N \x01adlı oyuncu ile \x10%N \x01Takım oldu!", client, g_iTeammates[client]);
 			TeleportEntity(client, vecPosition, NULL_VECTOR, NULL_VECTOR);
+			EmitSoundToClient(client, "sourcepawn_com/isinlanma.mp3");
+			EmitSoundToClient(g_iTeammates[client], "sourcepawn_com/isinlanma.mp3");
 			
 			LoopAllTerrorist(i)
 			{
