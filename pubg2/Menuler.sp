@@ -134,7 +134,7 @@ public Action CMD_PubgTakim(int client, int args)
 			Menu takimm = new Menu(TakimMenuCallBack);
 			takimm.SetTitle("[PUBG] Takım Menüsü\n ");
 			if (g_iTeammates[client] != 0)
-				takimm.AddItem("ayrıl", "Takımdan Ayrıl");
+				takimm.AddItem("ayrıl", "➔ Takımdan Ayrıl");
 			else
 			{
 				LoopAllTerrorist(i)
@@ -205,9 +205,9 @@ public int TakimMenuCallBack(Menu menu, MenuAction action, int client, int posit
 public void OnayMenu(int client, int gonderen)
 {
 	Menu onaym = new Menu(OnayMenuCallBack);
-	onaym.SetTitle("%N Takım Daveti Yolladı", gonderen);
-	onaym.AddItem("kabul", "Kabul Et!");
-	onaym.AddItem("red", "Reddet!");
+	onaym.SetTitle("★ %N Takım Daveti Yolladı ★", gonderen);
+	onaym.AddItem("kabul", "✓ Kabul Et!");
+	onaym.AddItem("red", "✕ Reddet!");
 	
 	g_iTeammates[client] = gonderen;
 	g_iTeammates[gonderen] = client;

@@ -11,7 +11,6 @@
 #include "pubg2/Helikopter.sp"
 #include "pubg2/Menuler.sp"
 #include "pubg2/Start.sp"
-#include "pubg2/redzone.sp"
 #pragma semicolon 1
 #pragma newdecls required 
 #pragma tabsize 0
@@ -26,5 +25,7 @@ public Plugin myinfo = { name = "PUBG Oyunu", author = "phiso, hibna", descripti
  \___ (  <_> )  |  /|  | \/\  \__\  ___/|  |_> > __ \\     /   |  \   \  \__(  <_> )  Y Y  \
 /____  >____/|____/ |__|    \___  >___  >   __(____  /\/\_/|___|  / /\ \___  >____/|__|_|  /
      \/                         \/    \/|__|       \/           \/  \/     \/            \/ 
+
+
 
 */
