@@ -309,12 +309,9 @@ public Action Pubg0(int client, int args)
 		SDKUnhook(client, SDKHook_OnTakeDamage, OnTakeDamage);
 		g_iTeammates[client] = 0;
 		PrintToChat(client, "[SM] \x02%N \x04isimli yetkili pubg oyununu durdurdu!");
-		SetClientListeningFlags(client, VOICE_LISTENALL);
-		foreachPlayer(target){
-			if(BaseComm_IsClientMuted(target)){
-				BaseComm_SetClientMute(target, true);
-			}
-		}
+		SetClientListeningFlags(client, VOICE_NORMAL);
+		if(BaseComm_IsClientMuted(client))
+			SetClientListeningFlags(client, VOICE_MUTED);
 	}
 	return Plugin_Handled;
 }

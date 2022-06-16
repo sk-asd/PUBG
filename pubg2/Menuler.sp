@@ -174,12 +174,12 @@ public int TakimMenuCallBack(Menu menu, MenuAction action, int client, int posit
 			
 			SDKUnhook(client, SDKHook_OnTakeDamage, OnTakeDamage);
 			SDKUnhook(g_iTeammates[client], SDKHook_OnTakeDamage, OnTakeDamage);
-			
-			foreachPlayer(i)
-			{
-				SetListenOverride(i, client, Listen_Yes);
-				SetListenOverride(i, g_iTeammates[client], Listen_Yes);
-			}
+			SetClientListeningFlags(client, VOICE_NORMAL);
+			SetClientListeningFlags(g_iTeammates[client], VOICE_NORMAL);
+			if(BaseComm_IsClientMuted(client))
+				SetClientListeningFlags(client, VOICE_MUTED);
+			if(BaseComm_IsClientMuted(g_iTeammates[client]))
+				SetClientListeningFlags(g_iTeammates[client], VOICE_MUTED);
 		}
 		else
 		{
@@ -233,10 +233,8 @@ public int OnayMenuCallBack(Menu menu, MenuAction action, int client, int itemNu
 			
 			LoopAllTerrorist(i)
 			{
-				PrintToChatAll("%d %d", i, GetClientListeningFlags(i));
 				SetListenOverride(i, client, Listen_No);
 				SetListenOverride(i, g_iTeammates[client], Listen_No);
-				PrintToChatAll("%d %d", i, GetClientListeningFlags(i));
 			}
 			
 			SetListenOverride(g_iTeammates[client], client, Listen_Yes);
