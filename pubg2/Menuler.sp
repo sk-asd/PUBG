@@ -233,8 +233,10 @@ public int OnayMenuCallBack(Menu menu, MenuAction action, int client, int itemNu
 			
 			LoopAllTerrorist(i)
 			{
+				PrintToChatAll("%d %d", i, GetClientListeningFlags(i));
 				SetListenOverride(i, client, Listen_No);
 				SetListenOverride(i, g_iTeammates[client], Listen_No);
+				PrintToChatAll("%d %d", i, GetClientListeningFlags(i));
 			}
 			
 			SetListenOverride(g_iTeammates[client], client, Listen_Yes);

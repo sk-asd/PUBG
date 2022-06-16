@@ -305,16 +305,16 @@ public Action Pubg0(int client, int args)
 		ClearWeaponEx(i);
 		GivePlayerItem(i, "weapon_knife");
 	}
-	foreachPlayer(player)
-	{
-		SDKUnhook(player, SDKHook_OnTakeDamage, OnTakeDamage);
-		g_iTeammates[player] = 0;
-		PrintToChat(player, "[SM] \x02%N \x04isimli yetkili pubg oyununu durdurdu!");
-		SetListenOverride(player, player, Listen_Yes);
-		bool muteliymis[MAXPLAYERS + 1] = { false, ... };
-		if (BaseComm_IsClientMuted(player))
-			muteliymis[player] = true;
-		SetListenOverride(player, muteliymis[player], Listen_No);
+	foreachPlayer(client) {
+		SDKUnhook(client, SDKHook_OnTakeDamage, OnTakeDamage);
+		g_iTeammates[client] = 0;
+		PrintToChat(client, "[SM] \x02%N \x04isimli yetkili pubg oyununu durdurdu!");
+		SetClientListeningFlags(client, VOICE_LISTENALL);
+		foreachPlayer(target){
+			if(BaseComm_IsClientMuted(target)){
+				BaseComm_SetClientMute(target, true);
+			}
+		}
 	}
 	return Plugin_Handled;
 }
