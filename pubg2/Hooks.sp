@@ -180,28 +180,28 @@ public Action OnTakeDamage(int victim, int &attacker, int &inflictor, float &dam
 
 public Action elbasladibitti(Event event, const char[] name, bool db)
 {
-	g_bAktif = false;
-	dropvar = false;
-	hazirlanma = -1;
-	SetCvar("mp_teammates_are_enemies", 0);
-	SetCvar("mp_friendlyfire", 0);
-	SilahTemizle();
-	foreachPlayer(player)
-	{
-		SetEntityMoveType(player, MOVETYPE_WALK);
-		kacles[player] = 0;
-		SDKUnhook(player, SDKHook_OnTakeDamage, OnTakeDamage);
-		g_iTeammates[player] = 0;
-		SetListenOverride(player, player, Listen_Yes);
-		bool muteliymis[MAXPLAYERS + 1] = { false, ... };
-		if (BaseComm_IsClientMuted(player))
-		{
-			muteliymis[player] = true;
-			
+	if(g_bAktif){
+		g_bAktif = false;
+		dropvar = false;
+		hazirlanma = -1;
+		SetCvar("mp_teammates_are_enemies", 0);
+		SetCvar("mp_friendlyfire", 0);
+		SilahTemizle();
+		foreachPlayer(client) {
+			SetEntityMoveType(client, MOVETYPE_WALK);
+			kacles[client] = 0;
+			SDKUnhook(client, SDKHook_OnTakeDamage, OnTakeDamage);
+			g_iTeammates[client] = 0;
+			foreachPlayer(target){
+				SetListenOverride(client, target, Listen_Yes);
+			}
+			if(BaseComm_IsClientMuted(client)){
+				BaseComm_SetClientMute(client, true);
+			}
 		}
-		SetListenOverride(player, muteliymis[player], Listen_No);
+		return Plugin_Continue;
 	}
-	return Plugin_Handled;
+	return Plugin_Continue;
 }
 
 public void hazirdegisti(ConVar convar, const char[] oldValue, const char[] newValue) { hazirlanma = StringToInt(newValue); }

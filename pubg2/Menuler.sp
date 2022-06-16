@@ -174,12 +174,12 @@ public int TakimMenuCallBack(Menu menu, MenuAction action, int client, int posit
 			
 			SDKUnhook(client, SDKHook_OnTakeDamage, OnTakeDamage);
 			SDKUnhook(g_iTeammates[client], SDKHook_OnTakeDamage, OnTakeDamage);
-			SetClientListeningFlags(client, VOICE_NORMAL);
-			SetClientListeningFlags(g_iTeammates[client], VOICE_NORMAL);
-			if(BaseComm_IsClientMuted(client))
-				SetClientListeningFlags(client, VOICE_MUTED);
-			if(BaseComm_IsClientMuted(g_iTeammates[client]))
-				SetClientListeningFlags(g_iTeammates[client], VOICE_MUTED);
+			
+			foreachPlayer(i)
+			{
+				SetListenOverride(i, client, Listen_Yes);
+				SetListenOverride(i, g_iTeammates[client], Listen_Yes);
+			}
 		}
 		else
 		{

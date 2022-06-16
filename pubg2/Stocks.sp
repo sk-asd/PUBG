@@ -298,20 +298,22 @@ public Action Pubg0(int client, int args)
 	SilahTemizle();
 	YeriTemizle();
 	WinPanelDelete();
-	LoopAllTerrorist(i)
-	{
-		kacles[i] = 0;
-		SetEntityMoveType(i, MOVETYPE_WALK);
-		ClearWeaponEx(i);
-		GivePlayerItem(i, "weapon_knife");
-	}
 	foreachPlayer(client) {
+		if(GetClientTeam(client) == CS_TEAM_T){
+			kacles[client] = 0;
+			SetEntityMoveType(client, MOVETYPE_WALK);
+			ClearWeaponEx(client);
+			GivePlayerItem(client, "weapon_knife");
+		}
 		SDKUnhook(client, SDKHook_OnTakeDamage, OnTakeDamage);
 		g_iTeammates[client] = 0;
 		PrintToChat(client, "[SM] \x02%N \x04isimli yetkili pubg oyununu durdurdu!");
-		SetClientListeningFlags(client, VOICE_NORMAL);
-		if(BaseComm_IsClientMuted(client))
-			SetClientListeningFlags(client, VOICE_MUTED);
+		foreachPlayer(target){
+			SetListenOverride(client, target, Listen_Yes);
+		}
+		if(BaseComm_IsClientMuted(client)){
+			BaseComm_SetClientMute(client, true);
+		}
 	}
 	return Plugin_Handled;
 }
