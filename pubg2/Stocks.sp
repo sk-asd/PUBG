@@ -287,35 +287,48 @@ public Action Pubg0(int client, int args)
 {
 	if (!g_bAktif)
 	{
-		PrintToChat(client, "[SM] \x04Şu anda zaten bir \x02pubg \x04oyunu oynanmıyor!");
+		ReplyToCommand(client, "[SM] \x04Şu anda zaten bir \x02pubg \x04oyunu oynanmıyor!");
 		return Plugin_Handled;
 	}
+	PrintToChatAll("[SM] \x02%N \x04isimli yetkili pubg oyununu durdurdu!", client);
+	Sifirla();
+	return Plugin_Handled;
+}
+
+stock void Sifirla()
+{
 	g_bAktif = false;
 	dropvar = false;
 	hazirlanma = -1;
+	SetCvar("sv_enablebunnyhopping", 1);
+	SetCvar("sv_autobunnyhopping", 1);
+	SetCvar("sv_airaccelerate", 2000);
+	SetCvar("sv_staminajumpcost", 0);
+	SetCvar("sv_staminalandcost", 0);
+	SetCvar("sv_staminamax", 0);
+	SetCvar("sv_staminarecoveryrate", 60);
 	SetCvar("mp_teammates_are_enemies", 0);
 	SetCvar("mp_friendlyfire", 0);
 	SilahTemizle();
 	YeriTemizle();
 	WinPanelDelete();
-	foreachPlayer(client) {
-		if(GetClientTeam(client) == CS_TEAM_T){
-			kacles[client] = 0;
-			SetEntityMoveType(client, MOVETYPE_WALK);
-			ClearWeaponEx(client);
-			GivePlayerItem(client, "weapon_knife");
-		}
-		SDKUnhook(client, SDKHook_OnTakeDamage, OnTakeDamage);
-		g_iTeammates[client] = 0;
-		PrintToChat(client, "[SM] \x02%N \x04isimli yetkili pubg oyununu durdurdu!");
-		foreachPlayer(target){
-			SetListenOverride(client, target, Listen_Yes);
-		}
-		if(BaseComm_IsClientMuted(client)){
-			BaseComm_SetClientMute(client, true);
+	LoopAllTerrorist(i)
+	{
+		kacles[i] = 0;
+		SetEntityMoveType(i, MOVETYPE_WALK);
+		ClearWeaponEx(i);
+		GivePlayerItem(i, "weapon_knife");
+	}
+	foreachPlayer(player)
+	{
+		SetEntityRenderColor(player, 255, 255, 255, 255);
+		SDKUnhook(player, SDKHook_OnTakeDamage, OnTakeDamage);
+		g_iTeammates[player] = 0;
+		foreachPlayer(i)
+		{
+			SetListenOverride(player, i, Listen_Default);
 		}
 	}
-	return Plugin_Handled;
 }
 
 public Action DropOlustur(int client, int args)
@@ -410,4 +423,16 @@ stock void WinPanelMessageEx(int client = -1, const char[] message = NULL_STRING
 			newevent_message.FireToClient(client);
 	}
 	newevent_message.Cancel();
+}
+
+stock void SetCvarFloat(char[] cvarName, float value)
+{
+	ConVar FloatCvar = FindConVar(cvarName);
+	if (FloatCvar == null)return;
+	int flags = FloatCvar.Flags;
+	flags &= ~FCVAR_NOTIFY;
+	FloatCvar.Flags = flags;
+	FloatCvar.FloatValue = value;
+	flags |= FCVAR_NOTIFY;
+	FloatCvar.Flags = flags;
 }

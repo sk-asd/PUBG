@@ -1,3 +1,5 @@
+
+
 public Action PubgBaslat(int client, int args)
 {
 	if (g_bAktif == false)
@@ -5,7 +7,7 @@ public Action PubgBaslat(int client, int args)
 		if (ARRAY_Spawns.Length >= 1)
 		{
 			KeyValues kv = CreateKeyValues("pubgsilah");
-			char map[64];
+			char      map[64];
 			GetCurrentMap(map, sizeof(map));
 			StringToLowerCase(map);
 			BuildPath(Path_SM, dosyayolu, sizeof(dosyayolu), "configs/pubgalan/%s_silah.txt", map);
@@ -13,8 +15,8 @@ public Action PubgBaslat(int client, int args)
 			if (kv.GotoFirstSubKey())
 			{
 				Panel wpanel = new Panel();
-				char Mesaj[256];
-				char sure[32];
+				char  Mesaj[256];
+				char  sure[32];
 				g_hazirlanma.GetString(sure, sizeof(sure));
 				int suremenu = StringToInt(sure);
 				Format(Mesaj, sizeof(Mesaj), "!- PUBG Oyunu Başlatıldı -!\n%d saniye sonra başlatılacak\n ", suremenu);
@@ -27,7 +29,7 @@ public Action PubgBaslat(int client, int args)
 				wpanel.CurrentKey = 4;
 				wpanel.DrawItem("Kapat.");
 				hazirlanma = suremenu;
-				g_bAktif = true;
+				g_bAktif   = true;
 				CreateTimer(1.0, countdown, _, TIMER_FLAG_NO_MAPCHANGE | TIMER_REPEAT);
 				char sBuffer[512];
 				Format(sBuffer, sizeof(sBuffer), "<font color='#00FF00' class='fontSize-xl'><b>%i<b></font> <font color='#FF0000' class='fontSize-xl'><b>saniye sonra oyun başlayacak!<b></font> <font color='#F0E68C' class='fontSize-xl'><b>!pubgtakimol<b></font> \n \n <img src='https://imgyukle.com/f/2022/04/30/Rhfpsh.jpg'", hazirlanma);
@@ -60,7 +62,13 @@ public Action PubgBaslat(int client, int args)
 	return Plugin_Handled;
 }
 
-public int callback(Menu menu, MenuAction action, int client, int item) { if (action == MenuAction_Select) {  } else if (action == MenuAction_End) { delete menu; } }
+public int callback(Menu menu, MenuAction action, int client, int item)
+{
+	if (action == MenuAction_Select) {}
+	else if (action == MenuAction_End) {
+		delete menu;
+	}
+}
 
 public Action countdown(Handle timer)
 {
@@ -68,12 +76,12 @@ public Action countdown(Handle timer)
 	{
 		return Plugin_Stop;
 	}
-	
+
 	if (hazirlanma == 1)
 	{
 		KeyValues kv = CreateKeyValues("pubgsilah");
-		char map[64];
-		float origin[3] = { 0.0, 0.0, 0.0 };
+		char      map[64];
+		float     origin[3] = { 0.0, 0.0, 0.0 };
 		GetCurrentMap(map, sizeof(map));
 		StringToLowerCase(map);
 		BuildPath(Path_SM, dosyayolu, sizeof(dosyayolu), "configs/pubgalan/%s_silah.txt", map);
@@ -85,7 +93,7 @@ public Action countdown(Handle timer)
 		}
 		do
 		{
-			kv.GetVector("Koordinat", origin); //modelspawn yapılacak tm
+			kv.GetVector("Koordinat", origin);    // modelspawn yapılacak tm
 			SilahOlustur(origin, "models/sourcepawn_com/silah.mdl");
 		}
 		while (kv.GotoNextKey());
@@ -94,6 +102,13 @@ public Action countdown(Handle timer)
 		char sBuffer[512];
 		Format(sBuffer, sizeof(sBuffer), "<font color='#FF0000'>!-</font> <font color='#00FF00'>PUBG OYUNU BAŞLADI</font> <font color='#FF0000'>-!</font>");
 		ShowStatusMessage(-1, sBuffer, 2);
+		SetCvar("sv_enablebunnyhopping", 0);
+		SetCvar("sv_autobunnyhopping", 0);
+		SetCvar("sv_airaccelerate", 101);
+		SetCvarFloat("sv_staminajumpcost", 0.080);
+		SetCvarFloat("sv_staminalandcost", 0.050);
+		SetCvar("sv_staminamax", 80);
+		SetCvar("sv_staminarecoveryrate", 60);
 		SetCvar("mp_teammates_are_enemies", 1);
 		SetCvar("mp_friendlyfire", 1);
 		LoopAllTerrorist(i)
@@ -139,7 +154,7 @@ public Action CMD_PubgTakim(int client, int args)
 			{
 				LoopAllTerrorist(i)
 				{
-					if (IsPlayerAlive(i) && i != client)
+					if (IsPlayerAlive(i) && i != client && g_iTeammates[i] == 0)
 					{
 						char name[32], id[32];
 						GetClientName(i, name, 32);
@@ -158,7 +173,6 @@ public Action CMD_PubgTakim(int client, int args)
 	return Plugin_Handled;
 }
 
-
 public int TakimMenuCallBack(Menu menu, MenuAction action, int client, int position)
 {
 	if (action == MenuAction_Select)
@@ -169,12 +183,12 @@ public int TakimMenuCallBack(Menu menu, MenuAction action, int client, int posit
 		{
 			PrintToChat(client, "[SM] \x10%N \x01Takımdan ayrıldı!", g_iTeammates[client]);
 			PrintToChat(g_iTeammates[client], "[SM] \x10%N \x01Takımdan ayrıldı!", client);
-			g_iTeammates[client] = 0;
+			g_iTeammates[client]               = 0;
 			g_iTeammates[g_iTeammates[client]] = 0;
-			
+
 			SDKUnhook(client, SDKHook_OnTakeDamage, OnTakeDamage);
 			SDKUnhook(g_iTeammates[client], SDKHook_OnTakeDamage, OnTakeDamage);
-			
+
 			foreachPlayer(i)
 			{
 				SetListenOverride(i, client, Listen_Yes);
@@ -208,10 +222,10 @@ public void OnayMenu(int client, int gonderen)
 	onaym.SetTitle("★ %N Takım Daveti Yolladı ★", gonderen);
 	onaym.AddItem("kabul", "✓ Kabul Et!");
 	onaym.AddItem("red", "✕ Reddet!");
-	
-	g_iTeammates[client] = gonderen;
+
+	g_iTeammates[client]   = gonderen;
 	g_iTeammates[gonderen] = client;
-	
+
 	onaym.ExitButton = false;
 	onaym.Display(client, 10);
 }
@@ -230,23 +244,30 @@ public int OnayMenuCallBack(Menu menu, MenuAction action, int client, int itemNu
 			TeleportEntity(client, vecPosition, NULL_VECTOR, NULL_VECTOR);
 			EmitSoundToClient(client, "sourcepawn_com/isinlanma.mp3");
 			EmitSoundToClient(g_iTeammates[client], "sourcepawn_com/isinlanma.mp3");
-			
+
+			int renk1 = GetRandomInt(0, 255);
+			int renk2 = GetRandomInt(0, 255);
+			int renk3 = GetRandomInt(0, 255);
+
+			SetEntityRenderColor(client, renk1, renk2, renk3, 255);
+			SetEntityRenderColor(g_iTeammates[client], renk1, renk2, renk3, 255);
+
 			LoopAllTerrorist(i)
 			{
 				SetListenOverride(i, client, Listen_No);
 				SetListenOverride(i, g_iTeammates[client], Listen_No);
 			}
-			
+
 			SetListenOverride(g_iTeammates[client], client, Listen_Yes);
 			SetListenOverride(client, g_iTeammates[client], Listen_Yes);
-			
+
 			SDKHook(client, SDKHook_OnTakeDamage, OnTakeDamage);
 			SDKHook(g_iTeammates[client], SDKHook_OnTakeDamage, OnTakeDamage);
 		}
 		else if (strcmp(info, "red") == 0)
 		{
 			PrintToChat(g_iTeammates[client], "[SM] \x10%N \x01adlı oyuncu Takım isteğini \x02reddetti!", client);
-			g_iTeammates[client] = 0;
+			g_iTeammates[client]               = 0;
 			g_iTeammates[g_iTeammates[client]] = 0;
 		}
 	}
@@ -303,7 +324,7 @@ public int AyarMenu(Menu menu, MenuAction action, int client, int item)
 				File file = OpenFile(dosyayolu, "w+");
 				delete file;
 			}
-			
+
 			KeyValues kv = new KeyValues("pubgsilah");
 			kv.ImportFromFile(dosyayolu);
 			Format(format, sizeof(format), "%i", GetRandomInt(0, 100000));
@@ -344,7 +365,8 @@ public int AyarMenu(Menu menu, MenuAction action, int client, int item)
 			GetCurrentMap(map, sizeof(map));
 			StringToLowerCase(map);
 			BuildPath(Path_SM, dosyayolu, sizeof(dosyayolu), "configs/pubgalan/%s_oyuncu.cfg", map);
-			if (FileExists(dosyayolu)) {
+			if (FileExists(dosyayolu))
+			{
 				ARRAY_Spawns.Clear();
 				DeleteFile(dosyayolu);
 				PrintCenterText(client, "Pubg oyuncu spawn noktaları sıfırlandı.");
@@ -359,6 +381,6 @@ public int AyarMenu(Menu menu, MenuAction action, int client, int item)
 	}
 	else if (action == MenuAction_End)
 		delete menu;
-	
+
 	return client;
 }

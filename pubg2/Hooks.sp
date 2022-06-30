@@ -78,11 +78,17 @@ public Action Event_PlayerDeath(Event event, const char[] name, bool dontBroadca
 		LoopAllTerrorist(i)
 		{
 			if (IsPlayerAlive(i))
+			{
 				yasayant++;
+			}
 		}
 		if (yasayant == 1)
 		{
-			PrintToChatAll("[SM] \x01PUBG Oyunu bitti! \x10%N \x01oyunu kazandı!", attacker);
+			int kazanan;
+			LoopAllTerrorist(i)
+				if(IsPlayerAlive(i))
+					kazanan = i;
+			PrintToChatAll("[SM] \x01PUBG Oyunu bitti! \x10%N \x01oyunu kazandı!", kazanan);
 			char format[512], attname[32];
 			GetClientName(attacker, attname, sizeof(attname));
 			if (attacker != client)
@@ -95,7 +101,7 @@ public Action Event_PlayerDeath(Event event, const char[] name, bool dontBroadca
 					EmitSoundToClient(i, "sourcepawn_com/winnersound.mp3");
 				}
 			}
-			ServerCommand("sm_pubgphiso0");
+			Sifirla();
 			//overlay + bitiş sesi
 		}
 		else if (yasayant == 2)
@@ -120,7 +126,7 @@ public Action Event_PlayerDeath(Event event, const char[] name, bool dontBroadca
 								ShowOverlay(i, "sourcepawn_com/br_winner", 5.0);
 								EmitSoundToClient(i, "sourcepawn_com/winnersound.mp3");
 							}
-							ServerCommand("sm_pubgphiso0");
+							Sifirla();
 						}
 					}
 				}
@@ -136,7 +142,7 @@ public Action OnTakeDamage(int victim, int &attacker, int &inflictor, float &dam
 	{
 		if (g_iTeammates[attacker] == victim)
 		{
-			damage = damage / 2.0; //32 / 2 == 15
+			damage = 0.0;
 			return Plugin_Changed;
 		}
 		
@@ -180,28 +186,32 @@ public Action OnTakeDamage(int victim, int &attacker, int &inflictor, float &dam
 
 public Action elbasladibitti(Event event, const char[] name, bool db)
 {
-	if(g_bAktif){
-		g_bAktif = false;
-		dropvar = false;
-		hazirlanma = -1;
-		SetCvar("mp_teammates_are_enemies", 0);
-		SetCvar("mp_friendlyfire", 0);
-		SilahTemizle();
-		foreachPlayer(client) {
-			SetEntityMoveType(client, MOVETYPE_WALK);
-			kacles[client] = 0;
-			SDKUnhook(client, SDKHook_OnTakeDamage, OnTakeDamage);
-			g_iTeammates[client] = 0;
-			foreachPlayer(target){
-				SetListenOverride(client, target, Listen_Yes);
-			}
-			if(BaseComm_IsClientMuted(client)){
-				BaseComm_SetClientMute(client, true);
-			}
+	g_bAktif = false;
+	dropvar = false;
+	hazirlanma = -1;
+	SetCvar("sv_enablebunnyhopping", 1);
+	SetCvar("sv_autobunnyhopping", 1);
+	SetCvar("sv_airaccelerate", 2000);
+	SetCvar("sv_staminajumpcost", 0);
+	SetCvar("sv_staminalandcost", 0);
+	SetCvar("sv_staminamax", 0);
+	SetCvar("sv_staminarecoveryrate", 60);
+	SetCvar("mp_teammates_are_enemies", 0);
+	SetCvar("mp_friendlyfire", 0);
+	SilahTemizle();
+	foreachPlayer(player)
+	{
+		SetEntityRenderColor(player, 255, 255, 255, 255);
+		SetEntityMoveType(player, MOVETYPE_WALK);
+		kacles[player] = 0;
+		SDKUnhook(player, SDKHook_OnTakeDamage, OnTakeDamage);
+		g_iTeammates[player] = 0;
+		foreachPlayer(i)
+		{
+			SetListenOverride(player, i, Listen_Default);
 		}
-		return Plugin_Continue;
 	}
-	return Plugin_Continue;
+	return Plugin_Handled;
 }
 
 public void hazirdegisti(ConVar convar, const char[] oldValue, const char[] newValue) { hazirlanma = StringToInt(newValue); }
