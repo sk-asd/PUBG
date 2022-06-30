@@ -1,9 +1,9 @@
 public void OnPluginStart()
 {
 	RegConsoleCmd("sm_pubgayarla", PubgAyar);
-	RegConsoleCmd("sm_pubgphiso", PubgBaslat);
-	RegConsoleCmd("sm_pubgphiso0", Pubg0);
-	RegConsoleCmd("sm_pubgtakimol", CMD_PubgTakim);
+	RegConsoleCmd("sm_pubg", PubgBaslat);
+	RegConsoleCmd("sm_pubg0", Pubg0);
+	RegConsoleCmd("sm_pubgtakim", CMD_PubgTakim);
 	RegConsoleCmd("sm_dropgonder", DropOlustur);
 	
 	HookEvent("player_death", Event_PlayerDeath);
